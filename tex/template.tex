@@ -1,0 +1,147 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Define Article %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass{report}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Using Packages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{empheq}
+\usepackage{mdframed}
+\usepackage{booktabs}
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{transparent}
+\usepackage{psfrag}
+\usepackage{pgfplots}
+\usepackage{bm}
+\usepackage{xparse}
+
+\def\ColorReset{\color[HTML]{cccccc}}
+
+\newcounter{brDepth}
+\NewDocumentCommand{\brColor}{}{
+    \color[HTML]{
+        \ifnumequal{\value{brDepth}}{1}{
+            ffd700
+        }{\ifnumequal{\value{brDepth}}{2}{
+            da70d6
+        }{\ifnumequal{\value{brDepth}}{3}{
+            179fff
+        }{
+            \errmessage{unreachable}
+        }}}
+    }
+}
+\NewDocumentCommand{\brPush}{}{
+    \stepcounter{brDepth}
+    \ifnumequal{\value{brDepth}}{4}{
+        \setcounter{brDepth}{1}
+    }{}
+}
+\NewDocumentCommand{\brPop}{}{
+    \addtocounter{brDepth}{-1}
+    \ifnumequal{\value{brDepth}}{0}{
+        \setcounter{brDepth}{3}
+    }{}
+}
+\NewDocumentCommand{\br}{mmm}{
+    \brPush
+    {\brColor
+        \left#1
+        {\ColorReset #2 }
+        \right#3
+    }
+    \brPop
+}
+\NewDocumentCommand{\group}{r()}{
+    \br({#1})
+}
+
+\NewDocumentCommand{\type}{m}{
+    {\color[HTML]{4ec9b0}#1}
+}
+\NewDocumentCommand{\lit}{m}{
+    {\color[HTML]{b5cea8}#1}
+}
+\NewDocumentCommand{\keyword}{m}{
+    {\color[HTML]{569cd6}#1}
+}
+\NewDocumentCommand{\op}{m}{
+    \mathbin{\color[HTML]{569cd6}#1}
+}
+\NewDocumentCommand{\stmt}{m}{
+    \mathrel{\color[HTML]{c586c0}#1}
+}
+\NewDocumentCommand{\aside}{m}{
+    \mathrlap{\qquad\color[HTML]{6a9955}#1}
+}
+\NewDocumentCommand{\var}{d<>m}{
+    {\color[HTML]{9cdcfe}#2}
+}
+\NewDocumentCommand{\const}{d<>m}{
+    {\color[HTML]{4fc1ff}#2}
+}
+\NewDocumentCommand{\ghost}{m}{
+    {\transparent{0.34}\color{white}#1}
+}
+
+\def\R{{\type{\mathbb{R}}}}
+\def\N{{\type{\mathbb{N}}}}
+\def\Z{{\type{\mathbb{Z}}}}
+\NewDocumentCommand{\fn}{md()}{
+    {\color[HTML]{dcdcaa}
+        #1
+        \IfValueT{#2}{
+            \group(#2)
+        }
+    }
+}
+
+\NewCommandCopy{\builtinBinom}{\binom}
+\RenewDocumentCommand{\binom}{mm}{
+    \ifbool{UseBinomials}{
+        \brPusha
+        {\brColor
+            \builtinBinom{
+                {\ColorReset #1}
+            }{
+                {\ColorReset #2}
+            }
+        }
+        \brPop
+    }{
+        \op{\frac{
+            \var{n}\op!
+        }{
+            \var{i}\op! \mul \br({\var{n} \op- \var{i}})\op!
+        }}
+    }
+}
+
+\NewDocumentCommand{\deriv}{e{^}m}{
+    \fn{\frac{
+        \IfValueTF{#1}{d^#1}{d}
+    }{
+        d\IfValueTF{#1}{{#2}^#1}{{#2}}
+    }}
+}
+
+\geometry{a4paper}
+\pagecolor[RGB]{31,31,31}
+% \pagecolor[RGB]{0,0,0}
+\ColorReset
+\addtolength{\jot}{2ex}
+
+\usepgfplotslibrary{colorbrewer}
+\pgfplotsset{width=8cm,compat=1.9}
+
+\title{@{TITLE}}
+\author{@{AUTHOR}}
+\begin{document}
+    \maketitle
+    @{CONTENT}
+\end{document}

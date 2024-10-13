@@ -1,0 +1,149 @@
+@title Math
+@author Amy Wilder
+
+const h, k are in Real
+let a, b, c, x be in Real
+let n, m be in Integer
+fn f, g
+
+# Reflexive
+
+x = x
+
+# Symmetric
+
+a =  b <=> b =  a
+a != b <=> b != a
+a <  b <=> b >  a
+a <= b <=> b >= a
+
+# Transitive
+
+(a = b /\ b = c) => a = c
+
+# Substitution
+
+a = b <=> f(a) = f(b)
+
+# Identity
+
+x + 0  = x
+x - 0  = x
+x * 1  = x
+x / 1  = x
+x^1    = x
+(e^x)' = e^x
+
+# Fixed Point
+
+x * 0     = 0
+x^0       = 0
+log[x](x) = 1
+ln(e)     = 1
+x'        = 0
+
+# Cancellation
+
+x - x     = 0
+x / x     = 1 where x != 0
+log[x](x) = 1
+ln(e)     = 1
+c'        = 0
+
+# Associative
+
+(a + b) + c = a + (b + c) % Addition
+(a * b) * c = a * (b * c) % Multiplication
+
+# Sum of
+
+a * c + b * c         = (a + b) * c   % Products
+log[n](a) + log[n](b) = log[n](a * b) % Logarithms
+(f(x) + g(x))'        = f'(x) + g'(x) % Derivatives
+
+# Difference of
+
+log[n](a) - log[n](b) = log[n](a / b) % Logarithms
+(f(x) - g(x))'        = f'(x) - g'(x) % Derivatives
+
+# Product of
+
+x^n * x^m      = x^(n + m)                   % Powers
+m * log[n](x)  = log[n](x^m)                 % Logarithms
+(f(x) - g(x))' = f'(x) * g(x) + f(x) * g'(x) % Derivatives
+
+# Quotient of
+
+x^n / x^m             = x^(n - m)                              % Powers
+log[n](x) / log[n](y) = log[y](x)                              % Logarithms
+(f(x) / g(x))'        = (f'(x) * g(x) - f(x) * g'(x)) / g^2(x) % Derivatives
+
+# Power of
+
+(x^n)^m   = x^(n * m)                                      % Powers
+(x * y)^n = x^n * y^n                                      % Products
+(a + b)^n = sum[i in 0..n]((n choose i) * a^(n - i) * b^i) % Sums
+(x / y)^n = x^n / y^n                                      % Quotients
+(x^n)'    = n * x^(n - 1)                                  % Derivatives
+
+# Log of
+
+log[n]'(x) = 1 / (x * ln(n)) % Derivatives
+
+## Natural Log of
+
+ln'(x) = 1 / x % Derivatives
+
+# Exponents of
+
+x^(n / m) = sqrt[m](x^n) % Quotients
+x^(-n)    = 1 / x^n      % Negation
+(a^x)'    = a^x * ln(a)  % Derivatives
+
+# Chain
+
+(f(g(x)))' = f'(g(x)) * g'(x)
+
+# Trig
+
+## Definitions
+
+sin(theta) = y / r = 1 / csc(theta)
+cos(theta) = x / r = 1 / sec(theta)
+tan(theta) = y / x = 1 / cot(theta) = sin(theta) / cos(theta)
+csc(theta) = r / y = 1 / sin(theta)
+sec(theta) = r / x = 1 / cos(theta)
+cot(theta) = x / y = 1 / tan(theta) = cos(theta) / sin(theta)
+
+## Pythagorean
+
+cos^2(theta) + sin^2(theta) = 1
+sin^2(theta)                = 1 - cos^2(theta)
+sin(theta)                  = +/- sqrt(1 - cos^2(theta))
+cos^2(theta)                = 1 - sin^2(theta)
+cos(theta)                  = +/- sqrt(1 - sin^2(theta))
+
+## Angle Sum and Difference
+
+sin(theta +/- phi) = sin(theta) * cos(phi) +/- cos(theta) * sin(phi)
+cos(theta +/- phi) = cos(theta) * cos(phi) -/+ sin(theta) * sin(phi)
+tan(theta +/- phi) = (tan(theta) +/- tan(phi)) / (1 -/+ tan(theta) * tan(phi))
+
+### Double Angle
+
+sin(2 * theta) = 2 * sin(theta) * cos(theta)
+sin(2 * theta) = 2 * sin(theta) * cos(theta)
+cos(2 * theta) = cos^2(theta) - sin^2(theta)
+tan(2 * theta) = (2 * tan(theta)) / (1 -/+ tan^2(theta))
+
+## Derivatives
+
+sin'(theta)    = cos(theta)
+cos'(theta)    = -sin(theta)
+tan'(theta)    = sec^2(theta)
+csc'(theta)    = -csc(theta) * cot(theta)
+sec'(theta)    = sec(theta) * tan(theta)
+cot'(theta)    = -csc^2(theta)
+arcsin'(theta) = 1 / sqrt(1 - theta^2)
+arccos'(theta) = -1 / sqrt(1 - theta^2)
+arctan'(theta) = 1 / (1 + theta^2)
