@@ -38,7 +38,8 @@ x^1    = x
 
 x * 0     = 0
 x^0       = 0
-log[x](x) = 1
+log[x](0) = 0
+log[x](1) = 1
 ln(e)     = 1
 x'        = 0
 
@@ -54,6 +55,17 @@ c'        = 0
 
 (a + b) + c = a + (b + c) % Addition
 (a * b) * c = a * (b * c) % Multiplication
+
+# Inverse
+
+(a + b) - b  = a
+(a - b) + b  = a
+(a * b) / b  = a
+(a / b) * b  = a
+sqrt[n](x)^n = x
+sqrt[n](x^n) = x
+log[n](n^x)  = x
+ln(e^x)      = x
 
 # Sum of
 
