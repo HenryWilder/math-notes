@@ -6,26 +6,28 @@ let a, b, c, x be in Real
 let n, m be in Integer
 fn f, g
 
-# Reflexive
+# Properties
+
+## Reflexive
 
 x = x
 
-# Symmetric
+## Symmetric
 
 a =  b <=> b =  a
 a != b <=> b != a
 a <  b <=> b >  a
 a <= b <=> b >= a
 
-# Transitive
+## Transitive
 
 (a = b /\ b = c) => a = c
 
-# Substitution
+## Substitution
 
 a = b <=> f(a) = f(b)
 
-# Identity
+## Identity
 
 x + 0  = x
 x - 0  = x
@@ -34,7 +36,7 @@ x / 1  = x
 x^1    = x
 (e^x)' = e^x
 
-# Fixed Point
+## Fixed Point
 
 x * 0     = 0
 x^0       = 0
@@ -43,7 +45,7 @@ log[x](1) = 1
 ln(e)     = 1
 x'        = 0
 
-# Cancellation
+## Cancellation
 
 x - x     = 0
 x / x     = 1 where x != 0
@@ -51,12 +53,12 @@ log[x](x) = 1
 ln(e)     = 1
 c'        = 0
 
-# Associative
+## Associative
 
 (a + b) + c = a + (b + c) % Addition
 (a * b) * c = a * (b * c) % Multiplication
 
-# Inverse
+## Inverse
 
 (a + b) - b  = a
 (a - b) + b  = a
@@ -67,30 +69,30 @@ sqrt[n](x^n) = x
 log[n](n^x)  = x
 ln(e^x)      = x
 
-# Sum of
+## Sum of
 
 a * c + b * c         = (a + b) * c   % Products
 log[n](a) + log[n](b) = log[n](a * b) % Logarithms
 (f(x) + g(x))'        = f'(x) + g'(x) % Derivatives
 
-# Difference of
+## Difference of
 
 log[n](a) - log[n](b) = log[n](a / b) % Logarithms
 (f(x) - g(x))'        = f'(x) - g'(x) % Derivatives
 
-# Product of
+## Product of
 
 x^n * x^m      = x^(n + m)                   % Powers
 m * log[n](x)  = log[n](x^m)                 % Logarithms
 (f(x) - g(x))' = f'(x) * g(x) + f(x) * g'(x) % Derivatives
 
-# Quotient of
+## Quotient of
 
 x^n / x^m             = x^(n - m)                              % Powers
 log[n](x) / log[n](y) = log[y](x)                              % Logarithms
 (f(x) / g(x))'        = (f'(x) * g(x) - f(x) * g'(x)) / g^2(x) % Derivatives
 
-# Power of
+## Power of
 
 (x^n)^m   = x^(n * m)                                      % Powers
 (x * y)^n = x^n * y^n                                      % Products
@@ -98,27 +100,27 @@ log[n](x) / log[n](y) = log[y](x)                              % Logarithms
 (x / y)^n = x^n / y^n                                      % Quotients
 (x^n)'    = n * x^(n - 1)                                  % Derivatives
 
-# Log of
+## Log of
 
 log[n]'(x) = 1 / (x * ln(n)) % Derivatives
 
-## Natural Log of
+### Natural Log of
 
 ln'(x) = 1 / x % Derivatives
 
-# Exponents of
+## Exponents of
 
 x^(n / m) = sqrt[m](x^n) % Quotients
 x^(-n)    = 1 / x^n      % Negation
 (a^x)'    = a^x * ln(a)  % Derivatives
 
-# Chain
+## Chain
 
 (f(g(x)))' = f'(g(x)) * g'(x)
 
-# Trig
+## Trig
 
-## Definitions
+### Definitions
 
 sin(theta) = y / r = 1 / csc(theta)
 cos(theta) = x / r = 1 / sec(theta)
@@ -127,7 +129,7 @@ csc(theta) = r / y = 1 / sin(theta)
 sec(theta) = r / x = 1 / cos(theta)
 cot(theta) = x / y = 1 / tan(theta) = cos(theta) / sin(theta)
 
-## Pythagorean
+### Pythagorean
 
 cos^2(theta) + sin^2(theta) = 1
 1 - cos^2(theta)            = sin^2(theta)
@@ -135,20 +137,20 @@ cos^2(theta) + sin^2(theta) = 1
 1 - sin^2(theta)            = cos^2(theta)
 +/- sqrt(1 - sin^2(theta))  = cos(theta)
 
-## Angle Sum and Difference
+### Angle Sum and Difference
 
 sin(theta +/- phi) = sin(theta) * cos(phi) +/- cos(theta) * sin(phi)
 cos(theta +/- phi) = cos(theta) * cos(phi) -/+ sin(theta) * sin(phi)
 tan(theta +/- phi) = (tan(theta) +/- tan(phi)) / (1 -/+ tan(theta) * tan(phi))
 
-### Double Angle
+#### Double Angle
 
 sin(2 * theta) = 2 * sin(theta) * cos(theta)
 sin(2 * theta) = 2 * sin(theta) * cos(theta)
 cos(2 * theta) = cos^2(theta) - sin^2(theta)
 tan(2 * theta) = (2 * tan(theta)) / (1 -/+ tan^2(theta))
 
-## Derivatives
+### Derivatives
 
 sin'(theta)    = cos(theta)
 cos'(theta)    = -sin(theta)
@@ -159,3 +161,5 @@ cot'(theta)    = -csc^2(theta)
 arcsin'(theta) = 1 / sqrt(1 - theta^2)
 arccos'(theta) = -1 / sqrt(1 - theta^2)
 arctan'(theta) = 1 / (1 + theta^2)
+
+log(e^x)
