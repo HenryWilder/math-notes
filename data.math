@@ -130,10 +130,10 @@ cot(theta) = x / y = 1 / tan(theta) = cos(theta) / sin(theta)
 ## Pythagorean
 
 cos^2(theta) + sin^2(theta) = 1
-sin^2(theta)                = 1 - cos^2(theta)
-sin(theta)                  = +/- sqrt(1 - cos^2(theta))
-cos^2(theta)                = 1 - sin^2(theta)
-cos(theta)                  = +/- sqrt(1 - sin^2(theta))
+1 - cos^2(theta)            = sin^2(theta)
++/- sqrt(1 - cos^2(theta))  = sin(theta)
+1 - sin^2(theta)            = cos^2(theta)
++/- sqrt(1 - sin^2(theta))  = cos(theta)
 
 ## Angle Sum and Difference
 
