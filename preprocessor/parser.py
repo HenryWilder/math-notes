@@ -24,7 +24,8 @@ def _binding_power(token: str) -> int:
             return len(_BINDING_POWER) - i
     return 0
 
-def _group(tokens: list[tuple[str, int]]) -> list[tuple[str, int]|list]:
+
+def _group(tokens: list) -> list:
     result = []
     i = 0
     for i in range(len(tokens)):
@@ -41,19 +42,20 @@ def _group(tokens: list[tuple[str, int]]) -> list[tuple[str, int]|list]:
 
     return (result, i)
 
-def _bind(grouped_tokens: list[tuple[str, int]|list]) -> list:
+
+def _bind(grouped_tokens: list) -> list:
     for i in range(len(grouped_tokens)):
         if isinstance(grouped_tokens[i], list):
             grouped_tokens[i] = _bind(grouped_tokens[i])
 
-    while max([item[1] for item in grouped_tokens if isinstance(item, tuple[str, int])]) > 0:
+    while any([ for token in grouped_tokens]):
         highest_power: int
         highest_power_index: int
         for i in range(len(grouped_tokens)):
-            if isinstance(grouped_tokens[i], tuple[str, int]):
-                token = grouped_tokens[i]
+            if not isinstance(grouped_tokens[i], list):
+                token: tuple[str,int] = grouped_tokens[i]
                 highest_power_index = i
-
+        
     return grouped_tokens
 
 
