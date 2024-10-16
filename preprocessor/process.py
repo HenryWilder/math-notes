@@ -1,5 +1,6 @@
 import re
-from tokenizer import tokenize
+from lexer import tokenize
+from parser import parse
 from converter import convert_token
 
 
@@ -39,8 +40,9 @@ def process_line(line: str):
             objects[item] = kind
     # Math
     else:
-        print(line)
+        print("line:", line)
         tokens = tokenize(line, objects)
-        tokens = [convert_token(token) for token in tokens]
-        print(tokens)
-        content[-1][2].append(" ".join(tokens))
+        ast = parse(tokens)
+        # tokens = [convert_token(token) for token in tokens]
+        # print(tokens)
+        # content[-1][2].append(" ".join(tokens))

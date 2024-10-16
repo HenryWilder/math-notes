@@ -150,130 +150,74 @@
 
     \section{Reflexive}
     \begin{gather*}
-        {\var{x}} = {\var{x}}
     \end{gather*}
 
     \section{Symmetric}
     \begin{gather*}
-        {\var{a}} = {\var{b}} {\stmt{\iff}} {\var{b}} = {\var{a}} \\
-        {\var{a}} {\stmt{\ne}} {\var{b}} {\stmt{\iff}} {\var{b}} {\stmt{\ne}} {\var{a}} \\
-        {\var{a}} < {\var{b}} {\stmt{\iff}} {\var{b}} > {\var{a}} \\
-        {\var{a}} {\stmt{\le}} {\var{b}} {\stmt{\iff}} {\var{b}} {\stmt{\ge}} {\var{a}}
     \end{gather*}
 
     \section{Transitive}
     \begin{gather*}
-        {\group( {\var{a}} = {\var{b}} {\op{\land}} {\var{b}} = {\var{c}} )} {\stmt{\implies}} {\var{a}} = {\var{c}}
     \end{gather*}
 
     \section{Substitution}
     \begin{gather*}
-        {\var{a}} = {\var{b}} {\stmt{\iff}} {\fn{f}} {\group( {\var{a}} )} = {\fn{f}} {\group( {\var{b}} )}
     \end{gather*}
 
     \section{Identity}
     \begin{gather*}
-        {\var{x}} + {\lit{0}} = {\var{x}} \\
-        {\var{x}} - {\lit{0}} = {\var{x}} \\
-        {\var{x}} \cdot {\lit{1}} = {\var{x}} \\
-        {\var{x}} / {\lit{1}} = {\var{x}} \\
-        {\var{x}} ^ {\lit{1}} = {\var{x}} \\
-        {\group( e ^ {\var{x}} )} {\stmt{^{\prime}}} = e ^ {\var{x}}
     \end{gather*}
 
     \section{Fixed Point}
     \begin{gather*}
-        {\var{x}} \cdot {\lit{0}} = {\lit{0}} \\
-        {\var{x}} ^ {\lit{0}} = {\lit{0}} \\
-        {\fn{\log}} [ {\var{x}} ] {\group( {\lit{0}} )} = {\lit{0}} \\
-        {\fn{\log}} [ {\var{x}} ] {\group( {\lit{1}} )} = {\lit{1}} \\
-        {\fn{\ln}} {\group( e )} = {\lit{1}} \\
-        {\var{x}} {\stmt{^{\prime}}} = {\lit{0}}
     \end{gather*}
 
     \section{Cancellation}
     \begin{gather*}
-        {\var{x}} - {\var{x}} = {\lit{0}} \\
-        {\var{x}} / {\var{x}} = {\lit{1}} {\stmt{\mathrel{\textrm{where}}}} {\var{x}} {\stmt{\ne}} {\lit{0}} \\
-        {\fn{\log}} [ {\var{x}} ] {\group( {\var{x}} )} = {\lit{1}} \\
-        {\fn{\ln}} {\group( e )} = {\lit{1}} \\
-        {\var{c}} {\stmt{^{\prime}}} = {\lit{0}}
     \end{gather*}
 
     \section{Associative}
     \begin{gather*}
-        {\group( {\var{a}} + {\var{b}} )} + {\var{c}} = {\var{a}} + {\group( {\var{b}} + {\var{c}} )} \\
-        {\group( {\var{a}} \cdot {\var{b}} )} \cdot {\var{c}} = {\var{a}} \cdot {\group( {\var{b}} \cdot {\var{c}} )}
     \end{gather*}
 
     \section{Inverse}
     \begin{gather*}
-        {\group( {\var{a}} + {\var{b}} )} - {\var{b}} = {\var{a}} \\
-        {\group( {\var{a}} - {\var{b}} )} + {\var{b}} = {\var{a}} \\
-        {\group( {\var{a}} \cdot {\var{b}} )} / {\var{b}} = {\var{a}} \\
-        {\group( {\var{a}} / {\var{b}} )} \cdot {\var{b}} = {\var{a}} \\
-        {\op{\sqrt}} [ {\var{n}} ] {\group( {\var{x}} )} ^ {\var{n}} = {\var{x}} \\
-        {\op{\sqrt}} [ {\var{n}} ] {\group( {\var{x}} ^ {\var{n}} )} = {\var{x}} \\
-        {\fn{\log}} [ {\var{n}} ] {\group( {\var{n}} ^ {\var{x}} )} = {\var{x}} \\
-        {\fn{\ln}} {\group( e ^ {\var{x}} )} = {\var{x}}
     \end{gather*}
 
     \section{Sum of}
     \begin{gather*}
-        {\var{a}} \cdot {\var{c}} + {\var{b}} \cdot {\var{c}} = {\group( {\var{a}} + {\var{b}} )} \cdot {\var{c}} \\
-        {\fn{\log}} [ {\var{n}} ] {\group( {\var{a}} )} + {\fn{\log}} [ {\var{n}} ] {\group( {\var{b}} )} = {\fn{\log}} [ {\var{n}} ] {\group( {\var{a}} \cdot {\var{b}} )} \\
-        {\group( {\fn{f}} {\group( {\var{x}} )} + {\fn{g}} {\group( {\var{x}} )} )} {\stmt{^{\prime}}} = {\fn{f}} {\stmt{^{\prime}}} {\group( {\var{x}} )} + {\fn{g}} {\stmt{^{\prime}}} {\group( {\var{x}} )}
     \end{gather*}
 
     \section{Difference of}
     \begin{gather*}
-        {\fn{\log}} [ {\var{n}} ] {\group( {\var{a}} )} - {\fn{\log}} [ {\var{n}} ] {\group( {\var{b}} )} = {\fn{\log}} [ {\var{n}} ] {\group( {\var{a}} / {\var{b}} )} \\
-        {\group( {\fn{f}} {\group( {\var{x}} )} - {\fn{g}} {\group( {\var{x}} )} )} {\stmt{^{\prime}}} = {\fn{f}} {\stmt{^{\prime}}} {\group( {\var{x}} )} - {\fn{g}} {\stmt{^{\prime}}} {\group( {\var{x}} )}
     \end{gather*}
 
     \section{Product of}
     \begin{gather*}
-        {\var{x}} ^ {\var{n}} \cdot {\var{x}} ^ {\var{m}} = {\var{x}} ^ {\group( {\var{n}} + {\var{m}} )} \\
-        {\var{m}} \cdot {\fn{\log}} [ {\var{n}} ] {\group( {\var{x}} )} = {\fn{\log}} [ {\var{n}} ] {\group( {\var{x}} ^ {\var{m}} )} \\
-        {\group( {\fn{f}} {\group( {\var{x}} )} - {\fn{g}} {\group( {\var{x}} )} )} {\stmt{^{\prime}}} = {\fn{f}} {\stmt{^{\prime}}} {\group( {\var{x}} )} \cdot {\fn{g}} {\group( {\var{x}} )} + {\fn{f}} {\group( {\var{x}} )} \cdot {\fn{g}} {\stmt{^{\prime}}} {\group( {\var{x}} )}
     \end{gather*}
 
     \section{Quotient of}
     \begin{gather*}
-        {\var{x}} ^ {\var{n}} / {\var{x}} ^ {\var{m}} = {\var{x}} ^ {\group( {\var{n}} - {\var{m}} )} \\
-        {\fn{\log}} [ {\var{n}} ] {\group( {\var{x}} )} / {\fn{\log}} [ {\var{n}} ] {\group( y )} = {\fn{\log}} [ y ] {\group( {\var{x}} )} \\
-        {\group( {\fn{f}} {\group( {\var{x}} )} / {\fn{g}} {\group( {\var{x}} )} )} {\stmt{^{\prime}}} = {\group( {\fn{f}} {\stmt{^{\prime}}} {\group( {\var{x}} )} \cdot {\fn{g}} {\group( {\var{x}} )} - {\fn{f}} {\group( {\var{x}} )} \cdot {\fn{g}} {\stmt{^{\prime}}} {\group( {\var{x}} )} )} / {\fn{g}} ^ {\lit{2}} {\group( {\var{x}} )}
     \end{gather*}
 
     \section{Power of}
     \begin{gather*}
-        {\group( {\var{x}} ^ {\var{n}} )} ^ {\var{m}} = {\var{x}} ^ {\group( {\var{n}} \cdot {\var{m}} )} \\
-        {\group( {\var{x}} \cdot y )} ^ {\var{n}} = {\var{x}} ^ {\var{n}} \cdot y ^ {\var{n}} \\
-        {\group( {\var{a}} + {\var{b}} )} ^ {\var{n}} = {\op{\sum}} [ i in {\lit{0}} .. {\var{n}} ] {\group( {\group( {\var{n}} choose i )} \cdot {\var{a}} ^ {\group( {\var{n}} - i )} \cdot {\var{b}} ^ i )} \\
-        {\group( {\var{x}} / y )} ^ {\var{n}} = {\var{x}} ^ {\var{n}} / y ^ {\var{n}} \\
-        {\group( {\var{x}} ^ {\var{n}} )} {\stmt{^{\prime}}} = {\var{n}} \cdot {\var{x}} ^ {\group( {\var{n}} - {\lit{1}} )}
     \end{gather*}
 
     \section{Log of}
     \begin{gather*}
-        {\fn{\log}} [ {\var{n}} ] {\stmt{^{\prime}}} {\group( {\var{x}} )} = {\lit{1}} / {\group( {\var{x}} \cdot {\fn{\ln}} {\group( {\var{n}} )} )}
     \end{gather*}
 
     \subsection{Natural Log of}
     \begin{gather*}
-        {\fn{\ln}} {\stmt{^{\prime}}} {\group( {\var{x}} )} = {\lit{1}} / {\var{x}}
     \end{gather*}
 
     \section{Exponents of}
     \begin{gather*}
-        {\var{x}} ^ {\group( {\var{n}} / {\var{m}} )} = {\op{\sqrt}} [ {\var{m}} ] {\group( {\var{x}} ^ {\var{n}} )} \\
-        {\var{x}} ^ {\group( - {\var{n}} )} = {\lit{1}} / {\var{x}} ^ {\var{n}} \\
-        {\group( {\var{a}} ^ {\var{x}} )} {\stmt{^{\prime}}} = {\var{a}} ^ {\var{x}} \cdot {\fn{\ln}} {\group( {\var{a}} )}
     \end{gather*}
 
     \section{Chain}
     \begin{gather*}
-        {\group( {\fn{f}} {\group( {\fn{g}} {\group( {\var{x}} )} )} )} {\stmt{^{\prime}}} = {\fn{f}} {\stmt{^{\prime}}} {\group( {\fn{g}} {\group( {\var{x}} )} )} \cdot {\fn{g}} {\stmt{^{\prime}}} {\group( {\var{x}} )}
     \end{gather*}
 
     \section{Trig}
@@ -282,50 +226,22 @@
 
     \subsection{Definitions}
     \begin{gather*}
-        {\fn{\sin}} {\group( \theta )} = y / r = {\lit{1}} / {\fn{\csc}} {\group( \theta )} \\
-        {\fn{\cos}} {\group( \theta )} = {\var{x}} / r = {\lit{1}} / {\fn{\sec}} {\group( \theta )} \\
-        {\fn{\tan}} {\group( \theta )} = y / {\var{x}} = {\lit{1}} / {\fn{\cot}} {\group( \theta )} = {\fn{\sin}} {\group( \theta )} / {\fn{\cos}} {\group( \theta )} \\
-        {\fn{\csc}} {\group( \theta )} = r / y = {\lit{1}} / {\fn{\sin}} {\group( \theta )} \\
-        {\fn{\sec}} {\group( \theta )} = r / {\var{x}} = {\lit{1}} / {\fn{\cos}} {\group( \theta )} \\
-        {\fn{\cot}} {\group( \theta )} = {\var{x}} / y = {\lit{1}} / {\fn{\tan}} {\group( \theta )} = {\fn{\cos}} {\group( \theta )} / {\fn{\sin}} {\group( \theta )}
     \end{gather*}
 
     \subsection{Pythagorean}
     \begin{gather*}
-        {\fn{\cos}} ^ {\lit{2}} {\group( \theta )} + {\fn{\sin}} ^ {\lit{2}} {\group( \theta )} = {\lit{1}} \\
-        {\lit{1}} - {\fn{\cos}} ^ {\lit{2}} {\group( \theta )} = {\fn{\sin}} ^ {\lit{2}} {\group( \theta )} \\
-        {\op{\pm}} {\op{\sqrt}} {\group( {\lit{1}} - {\fn{\cos}} ^ {\lit{2}} {\group( \theta )} )} = {\fn{\sin}} {\group( \theta )} \\
-        {\lit{1}} - {\fn{\sin}} ^ {\lit{2}} {\group( \theta )} = {\fn{\cos}} ^ {\lit{2}} {\group( \theta )} \\
-        {\op{\pm}} {\op{\sqrt}} {\group( {\lit{1}} - {\fn{\sin}} ^ {\lit{2}} {\group( \theta )} )} = {\fn{\cos}} {\group( \theta )}
     \end{gather*}
 
     \subsection{Angle Sum and Difference}
     \begin{gather*}
-        {\fn{\sin}} {\group( \theta {\op{\pm}} \phi )} = {\fn{\sin}} {\group( \theta )} \cdot {\fn{\cos}} {\group( \phi )} {\op{\pm}} {\fn{\cos}} {\group( \theta )} \cdot {\fn{\sin}} {\group( \phi )} \\
-        {\fn{\cos}} {\group( \theta {\op{\pm}} \phi )} = {\fn{\cos}} {\group( \theta )} \cdot {\fn{\cos}} {\group( \phi )} {\op{\mp}} {\fn{\sin}} {\group( \theta )} \cdot {\fn{\sin}} {\group( \phi )} \\
-        {\fn{\tan}} {\group( \theta {\op{\pm}} \phi )} = {\group( {\fn{\tan}} {\group( \theta )} {\op{\pm}} {\fn{\tan}} {\group( \phi )} )} / {\group( {\lit{1}} {\op{\mp}} {\fn{\tan}} {\group( \theta )} \cdot {\fn{\tan}} {\group( \phi )} )}
     \end{gather*}
 
     \subsubsection{Double Angle}
     \begin{gather*}
-        {\fn{\sin}} {\group( {\lit{2}} \cdot \theta )} = {\lit{2}} \cdot {\fn{\sin}} {\group( \theta )} \cdot {\fn{\cos}} {\group( \theta )} \\
-        {\fn{\sin}} {\group( {\lit{2}} \cdot \theta )} = {\lit{2}} \cdot {\fn{\sin}} {\group( \theta )} \cdot {\fn{\cos}} {\group( \theta )} \\
-        {\fn{\cos}} {\group( {\lit{2}} \cdot \theta )} = {\fn{\cos}} ^ {\lit{2}} {\group( \theta )} - {\fn{\sin}} ^ {\lit{2}} {\group( \theta )} \\
-        {\fn{\tan}} {\group( {\lit{2}} \cdot \theta )} = {\group( {\lit{2}} \cdot {\fn{\tan}} {\group( \theta )} )} / {\group( {\lit{1}} {\op{\mp}} {\fn{\tan}} ^ {\lit{2}} {\group( \theta )} )}
     \end{gather*}
 
     \subsection{Derivatives}
     \begin{gather*}
-        {\fn{\sin}} {\stmt{^{\prime}}} {\group( \theta )} = {\fn{\cos}} {\group( \theta )} \\
-        {\fn{\cos}} {\stmt{^{\prime}}} {\group( \theta )} = - {\fn{\sin}} {\group( \theta )} \\
-        {\fn{\tan}} {\stmt{^{\prime}}} {\group( \theta )} = {\fn{\sec}} ^ {\lit{2}} {\group( \theta )} \\
-        {\fn{\csc}} {\stmt{^{\prime}}} {\group( \theta )} = - {\fn{\csc}} {\group( \theta )} \cdot {\fn{\cot}} {\group( \theta )} \\
-        {\fn{\sec}} {\stmt{^{\prime}}} {\group( \theta )} = {\fn{\sec}} {\group( \theta )} \cdot {\fn{\tan}} {\group( \theta )} \\
-        {\fn{\cot}} {\stmt{^{\prime}}} {\group( \theta )} = - {\fn{\csc}} ^ {\lit{2}} {\group( \theta )} \\
-        \arcsin {\stmt{^{\prime}}} {\group( \theta )} = {\lit{1}} / {\op{\sqrt}} {\group( {\lit{1}} - \theta ^ {\lit{2}} )} \\
-        \arccos {\stmt{^{\prime}}} {\group( \theta )} = - {\lit{1}} / {\op{\sqrt}} {\group( {\lit{1}} - \theta ^ {\lit{2}} )} \\
-        \arctan {\stmt{^{\prime}}} {\group( \theta )} = {\lit{1}} / {\group( {\lit{1}} + \theta ^ {\lit{2}} )} \\
-        {\fn{\log}} {\group( e ^ {\var{x}}
     \end{gather*}
 
 \end{document}
