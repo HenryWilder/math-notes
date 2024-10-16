@@ -12,7 +12,7 @@ pub fn process_file(src: &Path, dest: &Path, template: &Path) -> Result<(), std:
         let mut template_file = File::open(template)?;
         template_file.read_to_string(&mut template_text)?;
     }
-    
+
     let mut src_text = String::new();
     {
         let mut src_file = File::open(src)?;

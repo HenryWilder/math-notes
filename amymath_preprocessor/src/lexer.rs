@@ -1,180 +1,75 @@
 use regex::Regex;
 
-#[derive(Debug, Clone, Copy)]
-pub enum OperatorToken {
-    Iff,
-    Implies,
-    Impliedby,
-    Equiv,
-    NEquiv,
-    Pm,
-    Mp,
-    To,
-    Gets,
-    Eq,
-    Ne,
-    Gt,
-    Ge,
-    Lt,
-    Le,
-    Wedge,
-    Vee,
-    Factorial,
-    Plus,
-    Minus,
-    CDot,
-    Frac,
-    Superscript,
-    Subscript,
-    Sim,
-    Prime,
-    Comma,
-    Colon,
+macro_rules! operator_tokens {
+    { $([$($token:literal),+] => $variant:ident => $tex:literal,)+ } => {
+        #[derive(Debug, Clone, Copy)]
+        pub enum OperatorToken {
+            $($variant,)*
+        }
 
-    Cup,
-    Cap,
-    In,
+        impl OperatorToken {
+            pub fn regex() -> Regex {
+                let mut tokens = [
+                    $($($token,)*)*
+                ];
+                tokens.sort_by(|a, b| b.len().cmp(&a.len()));
+                Regex::new(tokens.map(regex::escape).join("|").as_str()).unwrap()
+            }
 
-    And,
-    Nand,
-    Or,
-    Nor,
-    Xor,
-    Xnor,
+            pub fn into_tex(self) -> &'static str {
+                match self {
+                    $(Self::$variant => $tex,)*
+                }
+            }
+
+            pub fn try_from(token: &str) -> Option<Self> {
+                match token {
+                    $($(| $token)* => Some(Self::$variant),)*
+                    _ => None,
+                }
+            }
+        }
+    };
 }
 
-impl OperatorToken {
-    pub fn regex() -> Regex {
-        let mut tokens = [
-            "<=>",
-            "=>",
-            "==>",
-            "<==",
-            "===",
-            "!==",
-            "+/-",
-            "-/+",
-            "->",
-            "<-",
-            "==",
-            "=",
-            "!=",
-            "=/=",
-            "<=",
-            ">=",
-            r"/\",
-            r"\/",
-            "<",
-            ">",
-            "!",
-            "+",
-            "-",
-            "*",
-            "/",
-            "^",
-            "_",
-            "~",
-            "'",
-            ",",
-            ":",
-            "|",
-            "&",
-            "in",
-            "and",
-            "nand",
-            "or",
-            "nor",
-            "xor",
-            "xnor",
-        ];
-        tokens.sort_by(|a, b| b.len().cmp(&a.len()));
-        Regex::new(tokens.map(regex::escape).join("|").as_str()).unwrap()
-    }
-
-    pub fn into_tex(self) -> &'static str {
-        match self {
-            Self::Iff         => r"\iff",
-            Self::Implies     => r"\implies",
-            Self::Impliedby   => r"\impliedby",
-            Self::Equiv       => r"\equiv",
-            Self::NEquiv      => r"\nequiv",
-            Self::Pm          => r"\pm",
-            Self::Mp          => r"\mp",
-            Self::To          => r"\to",
-            Self::Gets        => r"\gets",
-            Self::Eq          => r"=",
-            Self::Ne          => r"\ne",
-            Self::Gt          => r">",
-            Self::Ge          => r"\ge",
-            Self::Lt          => r"<",
-            Self::Le          => r"\le",
-            Self::Wedge       => r"\bigwedge",
-            Self::Vee         => r"\bigvee",
-            Self::Factorial   => r"!",
-            Self::Plus        => r"+",
-            Self::Minus       => r"-",
-            Self::CDot        => r"\cdot",
-            Self::Frac        => r"\frac",
-            Self::Superscript => r"^",
-            Self::Subscript   => r"_",
-            Self::Sim         => r"\sim",
-            Self::Prime       => r"\prime",
-            Self::Comma       => r",",
-            Self::Colon       => r":",
-            Self::Cup        => r"\cup",
-            Self::Cap        => r"\cap",
-            Self::In         => r"\in",
-            Self::And        => r"\land",
-            Self::Nand       => r"\lnand",
-            Self::Or         => r"\lor",
-            Self::Nor        => r"\lnor",
-            Self::Xor        => r"\lxor",
-            Self::Xnor       => r"\lxnor",
-        }
-    }
-
-    pub fn try_from(token: &str) -> Option<Self> {
-        match token {
-            "<=>" | "=>" => Some(Self::Iff),
-            "==>"        => Some(Self::Implies),
-            "<=="        => Some(Self::Impliedby),
-            "==="        => Some(Self::Equiv),
-            "!=="        => Some(Self::NEquiv),
-            "+/-"        => Some(Self::Pm),
-            "-/+"        => Some(Self::Mp),
-            "->"         => Some(Self::To),
-            "<-"         => Some(Self::Gets),
-            "==" | "="   => Some(Self::Eq),
-            "!=" | "=/=" => Some(Self::Ne),
-            "<="         => Some(Self::Le),
-            ">="         => Some(Self::Ge),
-            r"/\"        => Some(Self::Wedge),
-            r"\/"        => Some(Self::Vee),
-            "<"          => Some(Self::Lt),
-            ">"          => Some(Self::Gt),
-            "!"          => Some(Self::Factorial),
-            "+"          => Some(Self::Plus),
-            "-"          => Some(Self::Minus),
-            "*"          => Some(Self::CDot),
-            "/"          => Some(Self::Frac),
-            "^"          => Some(Self::Superscript),
-            "_"          => Some(Self::Subscript),
-            "~"          => Some(Self::Sim),
-            "'"          => Some(Self::Prime),
-            ","          => Some(Self::Comma),
-            ":"          => Some(Self::Colon),
-            "|"          => Some(Self::Cup),
-            "&"          => Some(Self::Cap),
-            "in"         => Some(Self::In),
-            "and"        => Some(Self::And),
-            "nand"       => Some(Self::Nand),
-            "or"         => Some(Self::Or),
-            "nor"        => Some(Self::Nor),
-            "xor"        => Some(Self::Xor),
-            "xnor"       => Some(Self::Xnor),
-            _ => None,
-        }
-    }
+operator_tokens!{
+    ["<=>"]       => Iff          => r"\iff",
+    ["==>", "=>"] => Implies      => r"\implies",
+    ["<=="]       => Impliedby    => r"\impliedby",
+    ["==="]       => Equiv        => r"\equiv",
+    ["!=="]       => NEquiv       => r"\nequiv",
+    ["+/-"]       => Pm           => r"\pm",
+    ["-/+"]       => Mp           => r"\mp",
+    ["->"]        => To           => r"\to",
+    ["<-"]        => Gets         => r"\gets",
+    ["==", "="]   => Eq           => "=",
+    ["!=", "=/="] => Ne           => r"\ne",
+    [">"]         => Gt           => ">",
+    [">="]        => Ge           => r"\ge",
+    [r"/\"]       => Wedge        => r"\bigwedge",
+    [r"\/"]       => Vee          => r"\bigvee",
+    ["<"]         => Lt           => r"<",
+    ["<="]        => Le           => r"\le",
+    ["!"]         => Factorial    => "!",
+    ["+"]         => Plus         => "+",
+    ["-"]         => Minus        => "-",
+    ["*"]         => CDot         => r"\cdot",
+    ["/"]         => Frac         => r"\frac",
+    ["^"]         => Superscript  => "^",
+    ["_"]         => Subscript    => "_",
+    ["~"]         => Sim          => r"\sim",
+    ["'"]         => Prime        => r"\prime",
+    [","]         => Comma        => ",",
+    [":"]         => Colon        => ":",
+    ["|"]         => Union        => r"\cup",
+    ["&"]         => Intersection => r"\cap",
+    ["in"]        => In           => r"\in",
+    ["and"]       => And          => r"\land",
+    ["nand"]      => Nand         => r"\lnand",
+    ["or"]        => Or           => r"\lor",
+    ["nor"]       => Nor          => r"\lnor",
+    ["xor"]       => Xor          => r"\lxor",
+    ["xnor"]      => Xnor         => r"\lxnor",
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -302,22 +197,22 @@ impl TrigFnToken {
 
 #[derive(Debug, Clone, Copy)]
 pub enum BuiltinWordToken {
+    // constants
+    Pi,
+    VarPhi,
+    VarNothing,
+
+    // variables
+    Theta,
+    Phi,
+    Psi,
+
+    // functions
     Sqrt,
     Log,
     Ln,
     Sum,
     Prod,
-
-    E,
-    Pi,
-    VarPhi,
-
-    Theta,
-    Phi,
-    Psi,
-
-    VarNothing,
-
     Trig(TrigFnToken),
 }
 
@@ -326,21 +221,22 @@ impl BuiltinWordToken {
 
     pub fn into_tex(self) -> &'static str {
         match self {
+            // constants
+            Self::Pi         => r"\pi",
+            Self::VarPhi     => r"\varphi",
+            Self::VarNothing => r"\varnothing",
+
+            // variables
+            Self::Theta      => r"\theta",
+            Self::Phi        => r"\phi",
+            Self::Psi        => r"\psi",
+
+            // functions
             Self::Sqrt       => r"\sqrt",
             Self::Log        => r"\log",
             Self::Ln         => r"\ln",
             Self::Sum        => r"\sum",
             Self::Prod       => r"\prod",
-
-            Self::Pi         => r"\pi",
-            Self::VarPhi     => r"\varphi",
-            Self::E          => "e",
-
-            Self::Theta      => r"\theta",
-            Self::Phi        => r"\phi",
-            Self::Psi        => r"\psi",
-
-            Self::VarNothing => r"\varnothing",
 
             Self::Trig(trig_fn_token) => trig_fn_token.into_tex(),
         }
@@ -348,22 +244,23 @@ impl BuiltinWordToken {
 
     pub fn try_from(token: &str) -> Option<Self> {
         match token {
+            // constants
+            "pi" => Some(Self::Pi),
+            "varphi" | "gold" => Some(Self::VarPhi),
+            "none" | "empty" => Some(Self::VarNothing),
+
+            // variables
+            "theta" => Some(Self::Theta),
+            "phi"   => Some(Self::Phi),
+            "psi"   => Some(Self::Psi),
+
+            // functions
             "sqrt" => Some(Self::Sqrt),
             "log"  => Some(Self::Log),
             "ln"   => Some(Self::Ln),
             "sum"  => Some(Self::Sum),
             "prod" => Some(Self::Prod),
 
-            "pi"              => Some(Self::Pi),
-            "varphi" | "gold" => Some(Self::VarPhi),
-            "e"               => Some(Self::E),
-
-            "theta" => Some(Self::Theta),
-            "phi"   => Some(Self::Phi),
-            "psi"   => Some(Self::Psi),
-
-            "none" | "empty" => Some(Self::VarNothing),
-            
             _ =>  TrigFnToken::try_from(token)
                 .map(|trig| Self::Trig(trig)),
         }
@@ -371,29 +268,43 @@ impl BuiltinWordToken {
 }
 
 #[derive(Debug, Clone, Copy)]
+pub enum WordToken<'doc> {
+    /// LaTeX is identical to the name
+    Direct(&'doc str),
+
+    /// LaTeX is an associated command
+    Builtin(BuiltinWordToken),
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum Token<'doc> {
-    /// Name of a variable, constant, or function
-    Word(&'doc str),
+    /// The name of a variable, constant, or function
+    Word(WordToken<'doc>),
+
     /// A literal number (excluding mathematical constants)
     Number(&'doc str),
-    /// Name of a built-in variable, constant, or function
-    BuiltinWord(BuiltinWordToken),
-    /// A binary or relational operator
+
+    /// A mathematical operator which may look at nodes to its left or right
     Operator(OperatorToken),
-    /// Brackets
+
+    /// A delimiter indicating the start or end of a subexpression
     GroupCtrl(GroupCtrlToken),
 }
 
 impl<'doc> Token<'doc> {
     pub fn into_tex(self) -> &'doc str {
         match self {
-            | Self::Word  (token)
-            | Self::Number(token)
+            Self::Word(WordToken::Direct(token)) | Self::Number(token)
                 => token,
 
-            Self::BuiltinWord(bw_token) => bw_token.into_tex(),
-            Self::Operator   (op_token) => op_token.into_tex(),
-            Self::GroupCtrl  (gc_token) => gc_token.into_tex(),
+            Self::Word(WordToken::Builtin(bw_token))
+                => bw_token.into_tex(),
+
+            Self::Operator(op_token)
+                => op_token.into_tex(),
+
+            Self::GroupCtrl(gc_token)
+                => gc_token.into_tex(),
         }
     }
 }
@@ -438,10 +349,10 @@ impl Lexer {
                 } else if self.rx_number.is_match(&token_str) {
                     Token::Number(token_str)
                 } else if self.rx_word.is_match(&token_str) {
-                    match BuiltinWordToken::try_from(&token_str) {
-                        Some(bw_token) => Token::BuiltinWord(bw_token),
-                        None => Token::Word(token_str)
-                    }
+                    Token::Word(match BuiltinWordToken::try_from(&token_str) {
+                        Some(bw_token) => WordToken::Builtin(bw_token),
+                        None => WordToken::Direct(token_str)
+                    })
                 } else {
                     panic!("Unrecognized token: \"{token_str}\"");
                 }
