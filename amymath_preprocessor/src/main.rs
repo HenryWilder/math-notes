@@ -29,7 +29,7 @@ pub fn process_file(src: &Path, dest: &Path, template: &Path) -> Result<(), std:
 }
 
 fn main() {
-    match process_file(Path::new("../data.math"), Path::new("../tex/output.tex"), Path::new("../tex/template.tex")) {
+    match process_file(Path::new("../test.math"), Path::new("../tex/output.tex"), Path::new("../tex/template.tex")) {
         Ok(()) => (),
         Err(e) => eprintln!("{e:?}"),
     }

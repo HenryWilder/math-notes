@@ -27,7 +27,7 @@ impl Heading<'_> {
 #[derive(Debug, Clone)]
 enum ContentItem<'doc> {
     Heading(Heading<'doc>),
-    Math(Vec<&'doc str>),
+    Math(Vec<String>),
 }
 
 pub fn process_document<'doc>(document: &'doc str, template: &str) -> String {
@@ -85,6 +85,13 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> String {
 
             let syntax_tree = parse(tokens);
             println!("syntax tree: {syntax_tree:#?}");
+
+            let tex = syntax_tree.into_tex();
+            println!("syntax tree TeX: {tex}");
+            match content.last_mut() {
+                Some(ContentItem::Math(math)) => math.push(tex),
+                _ => content.push(ContentItem::Math(vec![tex])),
+            }
         }
     }
 

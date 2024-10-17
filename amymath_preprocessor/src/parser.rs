@@ -59,6 +59,40 @@ pub mod syntax_tree {
         pub fn new_group() -> Self {
             Self::Group(SyntaxTree::new())
         }
+
+        fn extract_inner_tex(self) -> String {
+            match self {
+                SyntaxNode::Group(group) => {
+                    assert!(matches!(group.0[..], [
+                        SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: _, ctrl: GroupControl::Open })),
+                        ..,
+                        SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: _, ctrl: GroupControl::Close })),
+                    ]), "Groups should include their delimiters");
+                    let end = group.0.len() - 1;
+                    group.0
+                        .into_iter()
+                        .take(end)
+                        .skip(1)
+                        .map(|node| node.into_tex())
+                        .collect::<Vec<String>>()
+                        .join(" ")
+                },
+                _ => self.into_tex(),
+            }
+        }
+
+        pub fn into_tex(self) -> String {
+            match self {
+                SyntaxNode::Token(token) => token.into_tex().to_owned(),
+                SyntaxNode::BinOp { lhs, op, rhs } => match op {
+                    OperatorToken::Frac => format!("\\op{{{}{{{}}}{{{}}}}}", op.into_tex(), lhs.extract_inner_tex(), rhs.extract_inner_tex() ),
+                    _ => format!("{{{}}}\\op{{{}}}{{{}}}", lhs.into_tex(), op.into_tex(), rhs.into_tex()),
+                },
+                SyntaxNode::PreOp { op, rhs } => format!("\\op{{{}}}{{{}}}", op.into_tex(), rhs.into_tex()),
+                SyntaxNode::SufOp { lhs, op } => format!("{{{}}}\\op{{{}}}", lhs.into_tex(), op.into_tex()),
+                SyntaxNode::Group(group) => group.into_tex(),
+            }
+        }
     }
 
     #[derive(Clone)]
@@ -81,6 +115,14 @@ pub mod syntax_tree {
 
         pub fn push_token(&mut self, token: Token<'doc>) {
             self.0.push(SyntaxNode::Token(token));
+        }
+
+        pub fn into_tex(self) -> String {
+            self.0
+                .into_iter()
+                .map(|node| node.into_tex())
+                .collect::<Vec<String>>()
+                .join(" ")
         }
     }
 }
@@ -163,37 +205,60 @@ fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) {
     }
 
     'a: loop {
-        for i in 0..tree.0.len() {
-            if let SyntaxNode::Token(Token::Operator(op_token)) = tree.0[i] {
-                let is_lhs_nonnull = i > 0;
-                let is_rhs_nonnull = i < tree.0.len() - 1;
-                let nary = op_token.nary();
-                for argn in nary {
-                    match (is_lhs_nonnull, argn, is_rhs_nonnull) {
-                        (true, NAry::Binary, true) => {
-                            let drained: Vec<_> = tree.0.drain((i - 1)..=(i + 1)).collect();
-                            let lhs = Box::new(drained[0].clone());
-                            let rhs = Box::new(drained[2].clone());
-                            tree.0.insert(i - 1, SyntaxNode::BinOp { lhs, op: op_token, rhs, });
-                            continue 'a;
-                        },
+        let operator_tokens: Vec<_> = tree.0
+            .iter()
+            .enumerate()
+            .filter_map(|(i, item)|
+                if let SyntaxNode::Token(Token::Operator(op_token)) = item {
+                    Some((i, op_token))
+                } else {
+                    None
+                }
+            )
+            .collect();
 
-                        (_, NAry::Prefix, true) => {
-                            let drained: Vec<_> = tree.0.drain(i..=(i + 1)).collect();
-                            let rhs = Box::new(drained[1].clone());
-                            tree.0.insert(i - 1, SyntaxNode::PreOp { op: op_token, rhs });
-                            continue 'a;
-                        },
+        let mut current_target = match operator_tokens.first() {
+            Some(&(i, op_token)) => (i, op_token.bind_power()),
+            None => break 'a,
+        };
 
-                        (true, NAry::Suffix, _) => {
-                            let drained: Vec<_> = tree.0.drain((i - 1)..=i).collect();
-                            let lhs = Box::new(drained[0].clone());
-                            tree.0.insert(i - 1, SyntaxNode::SufOp { lhs, op: op_token, });
-                            continue 'a;
-                        },
+        for (i, op_token) in operator_tokens {
+            let bind_power = op_token.bind_power();
+            if bind_power > current_target.1 {
+                current_target = (i, bind_power);
+            }
+        }
+        let (i, _) = current_target;
 
-                        _ => (),
-                    }
+        if let SyntaxNode::Token(Token::Operator(op_token)) = tree.0[i] {
+            let is_lhs_nonnull = i > 0;
+            let is_rhs_nonnull = i < tree.0.len() - 1;
+            let nary = op_token.nary();
+            for argn in nary {
+                match (is_lhs_nonnull, argn, is_rhs_nonnull) {
+                    (true, NAry::Binary, true) => {
+                        let drained: Vec<_> = tree.0.drain((i - 1)..=(i + 1)).collect();
+                        let lhs = Box::new(drained[0].clone());
+                        let rhs = Box::new(drained[2].clone());
+                        tree.0.insert(i - 1, SyntaxNode::BinOp { lhs, op: op_token, rhs, });
+                        continue 'a;
+                    },
+
+                    (_, NAry::Prefix, true) => {
+                        let drained: Vec<_> = tree.0.drain(i..=(i + 1)).collect();
+                        let rhs = Box::new(drained[1].clone());
+                        tree.0.insert(i - 1, SyntaxNode::PreOp { op: op_token, rhs });
+                        continue 'a;
+                    },
+
+                    (true, NAry::Suffix, _) => {
+                        let drained: Vec<_> = tree.0.drain((i - 1)..=i).collect();
+                        let lhs = Box::new(drained[0].clone());
+                        tree.0.insert(i - 1, SyntaxNode::SufOp { lhs, op: op_token, });
+                        continue 'a;
+                    },
+
+                    _ => (),
                 }
             }
         }
