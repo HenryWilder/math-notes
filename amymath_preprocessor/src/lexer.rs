@@ -1,20 +1,31 @@
 use regex::Regex;
 
+macro_rules! const_len {
+    () => {
+        0
+    };
+
+    ($_first:tt $($rest:tt)*) => {
+        1 + const_len!($($rest)*)
+    };
+}
+
 macro_rules! operator_tokens {
-    { $([$($token:literal),+] => $variant:ident => $tex:literal,)+ } => {
-        #[derive(Debug, Clone, Copy)]
-        pub enum OperatorToken {
+    {
+        #[$meta:meta]
+        enum $name:ident {
+            $([$($token:literal),+ $(,)?] => $variant:ident => $tex:literal),+ $(,)?
+        }
+    } => {
+        #[$meta]
+        pub enum $name {
             $($variant,)*
         }
 
-        impl OperatorToken {
-            pub fn regex() -> Regex {
-                let mut tokens = [
-                    $($($token,)*)*
-                ];
-                tokens.sort_by(|a, b| b.len().cmp(&a.len()));
-                Regex::new(tokens.map(regex::escape).join("|").as_str()).unwrap()
-            }
+        impl $name {
+            const TOKENS: [&'static str; const_len!($($($token)*)*)] = [
+                $($($token,)*)*
+            ];
 
             pub fn into_tex(self) -> &'static str {
                 match self {
@@ -33,43 +44,61 @@ macro_rules! operator_tokens {
 }
 
 operator_tokens!{
-    ["<=>"]       => Iff          => r"\iff",
-    ["==>", "=>"] => Implies      => r"\implies",
-    ["<=="]       => Impliedby    => r"\impliedby",
-    ["==="]       => Equiv        => r"\equiv",
-    ["!=="]       => NEquiv       => r"\nequiv",
-    ["+/-"]       => Pm           => r"\pm",
-    ["-/+"]       => Mp           => r"\mp",
-    ["->"]        => To           => r"\to",
-    ["<-"]        => Gets         => r"\gets",
-    ["==", "="]   => Eq           => "=",
-    ["!=", "=/="] => Ne           => r"\ne",
-    [">"]         => Gt           => ">",
-    [">="]        => Ge           => r"\ge",
-    [r"/\"]       => Wedge        => r"\bigwedge",
-    [r"\/"]       => Vee          => r"\bigvee",
-    ["<"]         => Lt           => r"<",
-    ["<="]        => Le           => r"\le",
-    ["!"]         => Factorial    => "!",
-    ["+"]         => Plus         => "+",
-    ["-"]         => Minus        => "-",
-    ["*"]         => CDot         => r"\cdot",
-    ["/"]         => Frac         => r"\frac",
-    ["^"]         => Superscript  => "^",
-    ["_"]         => Subscript    => "_",
-    ["~"]         => Sim          => r"\sim",
-    ["'"]         => Prime        => r"\prime",
-    [","]         => Comma        => ",",
-    [":"]         => Colon        => ":",
-    ["|"]         => Union        => r"\cup",
-    ["&"]         => Intersection => r"\cap",
-    ["in"]        => In           => r"\in",
-    ["and"]       => And          => r"\land",
-    ["nand"]      => Nand         => r"\lnand",
-    ["or"]        => Or           => r"\lor",
-    ["nor"]       => Nor          => r"\lnor",
-    ["xor"]       => Xor          => r"\lxor",
-    ["xnor"]      => Xnor         => r"\lxnor",
+    #[derive(Debug, Clone, Copy)]
+    enum OperatorToken {
+        ["<=>"]       => Iff          => r"\iff",
+        ["==>", "=>"] => Implies      => r"\implies",
+        ["<=="]       => Impliedby    => r"\impliedby",
+        ["==="]       => Equiv        => r"\equiv",
+        ["!=="]       => NEquiv       => r"\nequiv",
+        ["+/-"]       => Pm           => r"\pm",
+        ["-/+"]       => Mp           => r"\mp",
+        ["->"]        => To           => r"\to",
+        ["<-"]        => Gets         => r"\gets",
+        ["==", "="]   => Eq           => "=",
+        ["!=", "=/="] => Ne           => r"\ne",
+        [">"]         => Gt           => ">",
+        [">="]        => Ge           => r"\ge",
+        [r"/\"]       => Wedge        => r"\bigwedge",
+        [r"\/"]       => Vee          => r"\bigvee",
+        ["<"]         => Lt           => r"<",
+        ["<="]        => Le           => r"\le",
+        ["!"]         => Factorial    => "!",
+        ["+"]         => Plus         => "+",
+        ["-"]         => Minus        => "-",
+        ["*"]         => CDot         => r"\cdot",
+        ["/"]         => Frac         => r"\frac",
+        ["^"]         => Superscript  => "^",
+        ["_"]         => Subscript    => "_",
+        ["~"]         => Sim          => r"\sim",
+        ["'"]         => Prime        => r"\prime",
+        [","]         => Comma        => ",",
+        [":"]         => Colon        => ":",
+        ["|"]         => Union        => r"\cup",
+        ["&"]         => Intersection => r"\cap",
+        ["in"]        => In           => r"\in",
+        ["and"]       => And          => r"\land",
+        ["nand"]      => Nand         => r"\lnand",
+        ["or"]        => Or           => r"\lor",
+        ["nor"]       => Nor          => r"\lnor",
+        ["xor"]       => Xor          => r"\lxor",
+        ["xnor"]      => Xnor         => r"\lxnor",
+        ["where"]     => Where        => r"\where",
+    }
+}
+
+impl OperatorToken {
+    pub fn regex() -> Regex {
+        let mut tokens = Self::TOKENS.map(|token| {
+            let [front_b, back_b] = [
+                token.chars().next(),
+                token.chars().next_back()
+            ].map(|x| if char::is_alphabetic(x.unwrap()) { r"\b" } else { "" });
+            format!("{front_b}{}{back_b}", regex::escape(token))
+        });
+        tokens.sort_by(|a, b| b.len().cmp(&a.len()));
+        Regex::new(tokens.join("|").as_str()).unwrap()
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

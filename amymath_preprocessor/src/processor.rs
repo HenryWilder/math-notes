@@ -80,7 +80,11 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> String {
         } else {
             println!("line: {line}");
             let tokens = lexer.tokenize(line);
-            println!("tokens: {tokens:#?}")
+            println!("tokens: [");
+            for token in tokens {
+                println!("  {token:?}");
+            }
+            println!("]")
         }
     }
 
