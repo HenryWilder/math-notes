@@ -1,103 +1,162 @@
+use std::fmt::Debug;
+
 use regex::Regex;
 
-macro_rules! const_len {
-    () => {
-        0
-    };
-
-    ($_first:tt $($rest:tt)*) => {
-        1 + const_len!($($rest)*)
-    };
+#[derive(PartialEq, Eq)]
+pub enum NAry {
+    /// Binary
+    Binary,
+    /// Unary prefix
+    Prefix,
+    /// Unary suffix (postfix)
+    Suffix,
 }
 
 macro_rules! operator_tokens {
     {
         #[$meta:meta]
-        enum $name:ident {
-            $([$($token:literal),+ $(,)?] => $variant:ident => $tex:literal),+ $(,)?
-        }
+        $vis:vis enum $name:ident { $(
+            { $(
+                $($token:literal)|+ => #[$($argn:ident)|+] $variant:ident => $tex:literal,
+            )* },
+        )* }
     } => {
         #[$meta]
-        pub enum $name {
-            $($variant,)*
+        $vis enum $name {
+            $($($variant,)*)*
         }
 
         impl $name {
-            const TOKENS: [&'static str; const_len!($($($token)*)*)] = [
-                $($($token,)*)*
+            const TOKENS: &'static [&'static str] = &[
+                $($($($token,)*)*)*
+            ];
+
+            const PRECEDENCES: &'static [&'static [Self]] = &[
+                $(&[$(Self::$variant),*]),*
             ];
 
             pub fn into_tex(self) -> &'static str {
                 match self {
-                    $(Self::$variant => $tex,)*
+                    $($(Self::$variant => $tex,)*)*
                 }
             }
 
             pub fn try_from(token: &str) -> Option<Self> {
                 match token {
-                    $($(| $token)* => Some(Self::$variant),)*
+                    $($($(| $token)* => Some(Self::$variant),)*)*
                     _ => None,
+                }
+            }
+
+            pub fn nary(&self) -> &'static [NAry] {
+                match self {
+                    $($(Self::$variant => &[$(NAry::$argn),*],)*)*
                 }
             }
         }
     };
 }
 
-operator_tokens!{
-    #[derive(Debug, Clone, Copy)]
-    enum OperatorToken {
-        ["<=>"]       => Iff          => r"\iff",
-        ["==>", "=>"] => Implies      => r"\implies",
-        ["<=="]       => Impliedby    => r"\impliedby",
-        ["==="]       => Equiv        => r"\equiv",
-        ["!=="]       => NEquiv       => r"\nequiv",
-        ["+/-"]       => Pm           => r"\pm",
-        ["-/+"]       => Mp           => r"\mp",
-        ["->"]        => To           => r"\to",
-        ["<-"]        => Gets         => r"\gets",
-        ["==", "="]   => Eq           => "=",
-        ["!=", "=/="] => Ne           => r"\ne",
-        [">"]         => Gt           => ">",
-        [">="]        => Ge           => r"\ge",
-        [r"/\"]       => Wedge        => r"\bigwedge",
-        [r"\/"]       => Vee          => r"\bigvee",
-        ["<"]         => Lt           => r"<",
-        ["<="]        => Le           => r"\le",
-        ["!"]         => Factorial    => "!",
-        ["+"]         => Plus         => "+",
-        ["-"]         => Minus        => "-",
-        ["*"]         => CDot         => r"\cdot",
-        ["/"]         => Frac         => r"\frac",
-        ["^"]         => Superscript  => "^",
-        ["_"]         => Subscript    => "_",
-        ["~"]         => Sim          => r"\sim",
-        ["'"]         => Prime        => r"\prime",
-        [","]         => Comma        => ",",
-        [":"]         => Colon        => ":",
-        ["|"]         => Union        => r"\cup",
-        ["&"]         => Intersection => r"\cap",
-        ["in"]        => In           => r"\in",
-        ["and"]       => And          => r"\land",
-        ["nand"]      => Nand         => r"\lnand",
-        ["or"]        => Or           => r"\lor",
-        ["nor"]       => Nor          => r"\lnor",
-        ["xor"]       => Xor          => r"\lxor",
-        ["xnor"]      => Xnor         => r"\lxnor",
-        ["where"]     => Where        => r"\where",
-    }
-}
-
 impl OperatorToken {
     pub fn regex() -> Regex {
-        let mut tokens = Self::TOKENS.map(|token| {
+        let mut tokens: Vec<_> = Self::TOKENS.iter().map(|token| {
             let [front_b, back_b] = [
                 token.chars().next(),
                 token.chars().next_back()
             ].map(|x| if char::is_alphabetic(x.unwrap()) { r"\b" } else { "" });
             format!("{front_b}{}{back_b}", regex::escape(token))
-        });
+        }).collect();
         tokens.sort_by(|a, b| b.len().cmp(&a.len()));
         Regex::new(tokens.join("|").as_str()).unwrap()
+    }
+
+    pub fn precedence(&self) -> usize {
+        Self::PRECEDENCES.iter()
+            .enumerate()
+            .find_map(|(n, items)| items.contains(self).then_some(n))
+            .unwrap()
+    }
+
+    pub fn bind_power(&self) -> usize {
+        Self::PRECEDENCES.len() - self.precedence()
+    }
+}
+
+operator_tokens!{
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum OperatorToken {
+        {
+            "_" => #[Binary] Subscript => "_",
+        },
+        {
+            "!"   => #[Suffix] Factorial => "!",
+            "'"   => #[Suffix] Prime     => r"\prime",
+            "not" => #[Prefix] Not       => r"\lnot",
+        },
+        {
+            "^" => #[Binary] Superscript  => "^",
+        },
+        {
+            "*" => #[Binary] CDot => r"\cdot",
+            "/" => #[Binary] Frac => r"\frac",
+        },
+        {
+            "+/-" => #[Binary] Pm    => r"\pm",
+            "-/+" => #[Binary] Mp    => r"\mp",
+            "+"   => #[Binary] Plus  => "+",
+            "-"   => #[Binary|Prefix] Minus => "-",
+        },
+        {
+            "->" => #[Binary] To   => r"\to",
+            "<-" => #[Binary] Gets => r"\gets",
+        },
+        {
+            ">"  => #[Binary] Gt  => ">",
+            ">=" => #[Binary] Ge  => r"\ge",
+            "<"  => #[Binary] Lt  => r"<",
+            "<=" => #[Binary] Le  => r"\le",
+            "in" => #[Binary] In  => r"\in",
+            "~"  => #[Binary] Sim => r"\sim",
+        },
+        {
+            "==" | "="   => #[Binary] Eq     => "=",
+            "!=" | "=/=" => #[Binary] Ne     => r"\ne",
+            "==="        => #[Binary] Equiv  => r"\equiv",
+            "!=="        => #[Binary] NEquiv => r"\nequiv",
+        },
+        {
+            r"/\"  => #[Binary] Wedge        => r"\bigwedge",
+            "and"  => #[Binary] And          => r"\land",
+            "nand" => #[Binary] Nand         => r"\lnand",
+            "&"    => #[Binary] Intersection => r"\cap",
+        },
+        {
+            "xor"  => #[Binary] Xor  => r"\lxor",
+            "xnor" => #[Binary] Xnor => r"\lxnor",
+        },
+        {
+            r"\/" => #[Binary] Vee   => r"\bigvee",
+            "|"   => #[Binary] Union => r"\cup",
+            "or"  => #[Binary] Or    => r"\lor",
+            "nor" => #[Binary] Nor   => r"\lnor",
+        },
+        {
+            "," => #[Binary] Comma => ",",
+        },
+        {
+            ":" => #[Binary] Colon => ":",
+        },
+        {
+            "==>" | "=>" => #[Binary] Implies   => r"\implies",
+            "<=="        => #[Binary] Impliedby => r"\impliedby",
+            "<=>"        => #[Binary] Iff       => r"\iff",
+        },
+        {
+            "so" => #[Binary] Therefore => r"\therefore",
+        },
+        {
+            "where" => #[Binary] Where => r"\where",
+        },
     }
 }
 
@@ -305,7 +364,7 @@ pub enum WordToken<'doc> {
     Builtin(BuiltinWordToken),
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum Token<'doc> {
     /// The name of a variable, constant, or function
     Word(WordToken<'doc>),
@@ -318,6 +377,22 @@ pub enum Token<'doc> {
 
     /// A delimiter indicating the start or end of a subexpression
     GroupCtrl(GroupCtrlToken),
+}
+
+impl<'doc> Debug for Token<'doc> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // force regular debug even if using "pretty" debug
+        match self {
+            Self::Word(arg0)
+                => write!(f, "Word({arg0:?})"),
+            Self::Number(arg0)
+                => write!(f, "Number({arg0:?})"),
+            Self::Operator(arg0)
+                => write!(f, "Operator({arg0:?})"),
+            Self::GroupCtrl(arg0)
+                => write!(f, "GroupCtrl({arg0:?})"),
+        }
+    }
 }
 
 impl<'doc> Token<'doc> {
