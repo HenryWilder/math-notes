@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 use regex::Regex;
-use crate::lexer::*;
+use crate::{lexer::*, parser::{parse, syntax_tree::*}};
 
 #[derive(Debug, Clone, Copy)]
 pub enum DefKind {
@@ -79,12 +79,31 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> String {
             }
         } else {
             println!("line: {line}");
+
             let tokens = lexer.tokenize(line);
             println!("tokens: [");
-            for token in tokens {
+            for token in tokens.iter() {
                 println!("  {token:?}");
             }
-            println!("]")
+            println!("]");
+
+            let syntax_tree = parse(tokens);
+            println!("syntax tree: [");
+            fn debug_tree(tree: &SyntaxTree, indent: &str) {
+                let indent = &format!("{indent}    ");
+                for node in tree.iter() {
+                    match node {
+                        SyntaxNode::Token(token) => println!("{indent}Token({token:?})"),
+                        SyntaxNode::Group(group) => {
+                            println!("{indent}Group([");
+                            debug_tree(group, indent);
+                            println!("{indent}])");
+                        },
+                    }
+                }
+            }
+            debug_tree(&syntax_tree, "");
+            println!("]");
         }
     }
 
