@@ -85,11 +85,11 @@ pub mod syntax_tree {
             match self {
                 SyntaxNode::Token(token) => token.into_tex().to_owned(),
                 SyntaxNode::BinOp { lhs, op, rhs } => match op {
-                    OperatorToken::Frac => format!("\\op{{{}{{{}}}{{{}}}}}", op.into_tex(), lhs.extract_inner_tex(), rhs.extract_inner_tex() ),
-                    _ => format!("{{{}}}\\op{{{}}}{{{}}}", lhs.into_tex(), op.into_tex(), rhs.into_tex()),
+                    OperatorToken::Frac => format!("\\op{{{}{{\\lit{{{}}}}}{{\\lit{{{}}}}}}}", op.into_tex(), lhs.extract_inner_tex(), rhs.extract_inner_tex() ),
+                    _ => format!("{{\\lit{{{}}}}}\\op{{{}}}{{\\lit{{{}}}}}", lhs.into_tex(), op.into_tex(), rhs.into_tex()),
                 },
-                SyntaxNode::PreOp { op, rhs } => format!("\\op{{{}}}{{{}}}", op.into_tex(), rhs.into_tex()),
-                SyntaxNode::SufOp { lhs, op } => format!("{{{}}}\\op{{{}}}", lhs.into_tex(), op.into_tex()),
+                SyntaxNode::PreOp { op, rhs } => format!("\\op{{{}}}{{\\lit{{{}}}}}", op.into_tex(), rhs.into_tex()),
+                SyntaxNode::SufOp { lhs, op } => format!("{{\\lit{{{}}}}}\\op{{\\lit{{{}}}}}", lhs.into_tex(), op.into_tex()),
                 SyntaxNode::Group(group) => group.into_tex(),
             }
         }
