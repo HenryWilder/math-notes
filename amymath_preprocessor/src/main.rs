@@ -1,4 +1,4 @@
-use std::{fs::File, io::{Read, Write}, path::Path};
+use std::{env, fs::{read_to_string, File}, io::Write};
 
 pub mod lexer;
 pub mod parser;
@@ -6,31 +6,60 @@ pub mod processor;
 
 use processor::process_document;
 
-pub fn process_file(src: &Path, dest: &Path, template: &Path) -> Result<(), std::io::Error> {
-    let mut template_text = String::new();
-    {
-        let mut template_file = File::open(template)?;
-        template_file.read_to_string(&mut template_text)?;
+const DEFAULT_TEMPLATE: &str = include_str!("template.sty");
+
+fn main() -> Result<(), std::io::Error> {
+    let args: Vec<String> = env::args().collect();
+    let root = env::current_dir().unwrap();
+
+    println!("Root: {root:#?}\nArgs: {args:#?}");
+
+    if args.len() > 4 {
+        return Err(std::io::Error::other("Too many arguments, I don't know what to do with these"))
     }
 
-    let mut src_text = String::new();
-    {
-        let mut src_file = File::open(src)?;
-        src_file.read_to_string(&mut src_text)?;
-    }
+    let source_path = if args.len() >= 2 {
+        let mut path = root.clone();
+        path.push(&args[1]);
+        path.set_extension("math");
+        path
+    } else {
+        return Err(std::io::Error::other("Missing argument for source document"));
+    };
+    println!("source path: {source_path:#?} exists? {}", File::open(&source_path).is_ok());
 
-    {
-        let mut dest_file = File::create(dest)?;
-        let output = process_document(&src_text, &template_text);
-        dest_file.write_all(output.as_bytes())?;
-    }
+    let source = {
+        read_to_string(&source_path)?
+    };
+    println!("source document: {source}");
+
+    let output_path = if args.len() >= 3 {
+        let mut path = root.clone();
+        path.push(&args[2]);
+        path.with_extension("tex");
+        path
+    } else {
+        source_path
+            .with_file_name("output")
+            .with_extension("tex")
+    };
+    println!("output path: {output_path:#?}");
+
+    let template: String = {
+        if args.len() >= 4 {
+            let mut path = root.clone();
+            path.push(&args[3]);
+            read_to_string(&path)?
+        } else {
+            DEFAULT_TEMPLATE.to_owned()
+        }
+    };
+    println!("template document:\n{template}");
+
+    let output = process_document(&source, &template);
+
+    let mut output_file = File::create(output_path)?;
+    output_file.write_all(output.as_bytes())?;
 
     Ok(())
-}
-
-fn main() {
-    match process_file(Path::new("../test.math"), Path::new("../tex/output.tex"), Path::new("../tex/template.tex")) {
-        Ok(()) => (),
-        Err(e) => eprintln!("{e:?}"),
-    }
 }

@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 use regex::Regex;
-use crate::{lexer::*, parser::{parse, syntax_tree::*}};
+use crate::{lexer::*, parser::parse};
 
 #[derive(Debug, Clone, Copy)]
 pub enum DefKind {
