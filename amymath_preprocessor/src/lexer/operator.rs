@@ -40,9 +40,9 @@ macro_rules! operator_tokens {
                 }
             }
 
-            pub fn nary(&self) -> &'static [NAry] {
+            pub fn nary(&self) -> Vec<NAry> {
                 match self {
-                    $($(Self::$variant => &[$(NAry::$argn),*],)*)*
+                    $($(Self::$variant => vec![$(NAry::$argn),*],)*)*
                 }
             }
         }
@@ -103,9 +103,9 @@ operator_tokens!{
             "/" => #[Binary] Frac => r"\frac",
         },
         {
-            "+/-" => #[Binary]        Pm    => r"\pm",
-            "-/+" => #[Binary]        Mp    => r"\mp",
-            "+"   => #[Binary]        Plus  => "+",
+            "+/-" => #[Binary|Prefix] Pm    => r"\pm",
+            "-/+" => #[Binary|Prefix] Mp    => r"\mp",
+            "+"   => #[Binary|Prefix] Plus  => "+",
             "-"   => #[Binary|Prefix] Minus => "-",
         },
         {

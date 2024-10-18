@@ -7,8 +7,9 @@ pub enum ParseError {
     TooManyCloseBrackets,
     NotEnoughCloseBrackets,
     OperatorMissingArguments{
-        num_provided: usize,
+        is_lhs_nonnull: bool,
         op_token: OperatorToken,
+        is_rhs_nonnull: bool,
     },
 }
 
@@ -19,8 +20,11 @@ impl std::fmt::Display for ParseError {
                 => write!(f, "More bracket/brace/parentheses groups were closed than opened"),
             ParseError::NotEnoughCloseBrackets
                 => write!(f, "More bracket/brace/parentheses groups were opened than closed"),
-            ParseError::OperatorMissingArguments { num_provided, op_token }
-                => write!(f, "No version of {op_token:?} operator takes {num_provided} arguments."),
+            ParseError::OperatorMissingArguments { is_lhs_nonnull, op_token, is_rhs_nonnull }
+                => write!(f, "No version of `{op_token:?}` operator takes {} left-hand argument and {} right-hand argument.",
+                    if *is_lhs_nonnull { "1" } else { "no" },
+                    if *is_rhs_nonnull { "1" } else { "no" },
+                ),
         }
     }
 }

@@ -94,7 +94,7 @@ fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) -> Result<(), ParseError> 
                     (_, NAry::Prefix, true) => {
                         let drained: Vec<_> = tree.0.drain(i..=(i + 1)).collect();
                         let rhs = Box::new(drained[1].clone());
-                        tree.0.insert(i - 1, SyntaxNode::PreOp { op: op_token, rhs });
+                        tree.0.insert(i + 1, SyntaxNode::PreOp { op: op_token, rhs });
                         continue 'a;
                     },
 
@@ -107,9 +107,8 @@ fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) -> Result<(), ParseError> 
 
                     _ => (),
                 }
-                let num_provided = if is_lhs_nonnull { 1 } else { 0 } + if is_rhs_nonnull { 1 } else { 0 };
-                return Err(ParseError::OperatorMissingArguments { num_provided, op_token });
             }
+            return Err(ParseError::OperatorMissingArguments { is_lhs_nonnull, op_token, is_rhs_nonnull });
         }
         break;
     }
