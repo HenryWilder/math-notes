@@ -7,9 +7,21 @@ use error::*;
 
 #[derive(Debug, Clone, Copy)]
 pub enum DefKind {
+    Literal,
     Variable,
     Constant,
     Function,
+}
+
+impl ToTex for DefKind {
+    fn to_tex(self) -> String {
+        match self {
+            DefKind::Literal  => r"\lit",
+            DefKind::Variable => r"\var",
+            DefKind::Constant => r"\const",
+            DefKind::Function => r"\fn",
+        }.to_string()
+    }
 }
 
 #[derive(Debug, Clone)]
