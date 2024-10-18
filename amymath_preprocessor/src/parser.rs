@@ -166,7 +166,30 @@ mod stack {
 }
 use stack::*;
 
-fn group_tokens<'doc>(tokens: Vec<Token<'doc>>) -> SyntaxTree<'doc> {
+#[derive(Debug)]
+pub enum ParseError {
+    TooManyCloseBrackets,
+    NotEnoughCloseBrackets,
+    OperatorMissingArguments{
+        num_provided: usize,
+        op_token: OperatorToken,
+    },
+}
+
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParseError::TooManyCloseBrackets
+                => write!(f, "More bracket/brace/parentheses groups were closed than opened"),
+            ParseError::NotEnoughCloseBrackets
+                => write!(f, "More bracket/brace/parentheses groups were opened than closed"),
+            ParseError::OperatorMissingArguments { num_provided, op_token }
+                => write!(f, "No version of {op_token:?} operator takes {num_provided} arguments."),
+        }
+    }
+}
+
+fn group_tokens<'doc>(tokens: Vec<Token<'doc>>) -> Result<SyntaxTree<'doc>, ParseError> {
     let mut stack = Stack::<SyntaxTree>::new();
     stack.push(SyntaxTree::new());
     // Form groups
@@ -179,6 +202,9 @@ fn group_tokens<'doc>(tokens: Vec<Token<'doc>>) -> SyntaxTree<'doc> {
             },
 
             Token::GroupCtrl(GroupCtrlToken { kind: _, ctrl: GroupControl::Close }) => {
+                if stack.is_empty() {
+                    return Err(ParseError::TooManyCloseBrackets);
+                }
                 let mut group = stack.pop();
                 group.push_token(token);
                 stack.top_mut().push_group(group);
@@ -189,18 +215,21 @@ fn group_tokens<'doc>(tokens: Vec<Token<'doc>>) -> SyntaxTree<'doc> {
             },
         }
     }
+    if stack.is_empty() {
+        return Err(ParseError::TooManyCloseBrackets);
+    }
     let result = stack.pop();
     if !stack.is_empty() {
-        panic!("Groups not properly closed");
+        return Err(ParseError::NotEnoughCloseBrackets);
     }
-    result
+    Ok(result)
 }
 
-fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) {
+fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) -> Result<(), ParseError> {
     // DFS
     for node in tree.0.iter_mut() {
         if let SyntaxNode::Group(group) = node {
-            group_operators(group);
+            group_operators(group)?;
         }
     }
 
@@ -260,14 +289,17 @@ fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) {
 
                     _ => (),
                 }
+                let num_provided = if is_lhs_nonnull { 1 } else { 0 } + if is_rhs_nonnull { 1 } else { 0 };
+                return Err(ParseError::OperatorMissingArguments { num_provided, op_token });
             }
         }
         break;
     }
+    Ok(())
 }
 
-pub fn parse<'doc>(tokens: Vec<Token<'doc>>) -> SyntaxTree<'doc> {
-    let mut tree = group_tokens(tokens);
-    group_operators(&mut tree);
-    tree
+pub fn parse<'doc>(tokens: Vec<Token<'doc>>) -> Result<SyntaxTree<'doc>, ParseError> {
+    let mut tree = group_tokens(tokens)?;
+    group_operators(&mut tree)?;
+    Ok(tree)
 }

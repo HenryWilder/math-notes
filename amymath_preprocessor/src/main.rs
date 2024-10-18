@@ -56,7 +56,10 @@ fn main() -> Result<(), std::io::Error> {
     };
     println!("template document:\n{template}");
 
-    let output = process_document(&source, &template);
+    let output = match process_document(&source, &template) {
+        Ok(output) => output,
+        Err(e) => return Err(std::io::Error::other(format!("While processing the document: {e}"))),
+    };
 
     let mut output_file = File::create(output_path)?;
     output_file.write_all(output.as_bytes())?;

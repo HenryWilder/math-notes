@@ -6,3 +6,4 @@
 *.log
 __pycache__
 amymath_preprocessor/target
+tex/

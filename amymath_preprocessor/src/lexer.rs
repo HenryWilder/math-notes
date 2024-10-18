@@ -413,6 +413,20 @@ impl<'doc> Token<'doc> {
     }
 }
 
+#[derive(Debug)]
+pub enum LexerError<'doc> {
+    UnknownToken{ token: &'doc str },
+}
+
+impl<'doc> std::fmt::Display for LexerError<'doc> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LexerError::UnknownToken{ token }
+                => write!(f, "Unrecognized token: `{token}`"),
+        }
+    }
+}
+
 pub struct Lexer {
     rx_word: Regex,
     rx_number: Regex,
@@ -441,27 +455,29 @@ impl Lexer {
         }
     }
 
-    pub fn tokenize<'doc>(&'_ self, line: &'doc str) -> Vec<Token<'doc>> {
-        self.rx_tokenize
+    pub fn tokenize<'doc>(&'_ self, line: &'doc str) -> Result<Vec<Token<'doc>>, LexerError<'doc>> {
+        let tokens = self.rx_tokenize
             .find_iter(line)
-            .map(|m| m.as_str())
-            .map(|token_str: &'doc str| {
+            .map(|token_match| {
+                let token_str: &'doc str = token_match.as_str();
                 if let Some(op_token) = OperatorToken::try_from(token_str) {
-                    Token::Operator(op_token)
+                    Ok(Token::Operator(op_token))
                 } else if let Some(gc_token) = GroupCtrlToken::try_from(&token_str) {
-                    Token::GroupCtrl(gc_token)
+                    Ok(Token::GroupCtrl(gc_token))
                 } else if self.rx_number.is_match(&token_str) {
-                    Token::Number(token_str)
+                    Ok(Token::Number(token_str))
                 } else if self.rx_word.is_match(&token_str) {
-                    Token::Word(match BuiltinWordToken::try_from(&token_str) {
+                    Ok(Token::Word(match BuiltinWordToken::try_from(&token_str) {
                         Some(bw_token) => WordToken::Builtin(bw_token),
                         None => WordToken::Direct(token_str)
-                    })
+                    }))
                 } else {
-                    panic!("Unrecognized token: \"{token_str}\"");
+                    Err(LexerError::UnknownToken { token: token_str })
                 }
             })
-            .collect()
+            .collect::<Result<_, _>>()?;
+
+        Ok(tokens)
     }
 }
 
