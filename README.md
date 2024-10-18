@@ -64,40 +64,123 @@ e pi tau varphi gold phi theta psi
 ### How this might look
 
 $\Large\textbf{0.1 ~~ Foo}$
+
 $$
-\def\brA#1{{\color{ffd700}#1}}
-\def\brB#1{{\color{da70d6}#1}}
-\def\brC#1{{\color{179fff}#1}}
-\def\lit#1{{\color{b5cea8}#1}}
-\def\op#1{\mathbin{\color{569cd6}#1}}
-\def\stmt#1{\mathrel{\color{c586c0}#1}}
-\def\var#1{{\color{9cdcfe}#1}}
-\def\const#1{{\color{4fc1ff}#1}}
-\def\fn#1{{\color{dcdcaa}#1}}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{gathered}
-    \op{\frac{\fn{\log_{\var{n}}\brA{(\var{x})}}}{\fn{\log_{\var{n}}\brA{(\var{m})}}}} \stmt{=} \fn{\log_{\var{m}}\brA{(\var{x})}} \\[3ex]
-    \var{x} \stmt{=} \var{y} \stmt{\bigwedge} \var{y} \stmt{=} \var{z} \stmt{\implies} \var{x} \stmt{=} \var{z} \\[3ex]
-    \brA{(\lit{9}\op{\cdot}\brB{(\lit{9}\op{\cdot}\brC{(\lit{9}\op{\cdot}\brA{(\lit{9}\op{\cdot}\brB{(\lit{9})})})})})}
+    \mathbin{\color{569cd6}
+        \frac{
+            {\color{dcdcaa}{
+                \log_{
+                    {\color{9cdcfe}{n}}
+                }
+                {\color{ffd700}{(
+                    {\color{9cdcfe}{x}}
+                )}}
+            }}
+        }{
+            {\color{dcdcaa}{
+                \log_{
+                    {\color{9cdcfe}{n}}
+                }
+                {\color{ffd700}{(
+                    {\color{9cdcfe}{m}}
+                )}}
+            }}
+        }
+    }
+    \mathrel{\color{c586c0}{=}}
+    {\color{dcdcaa}{
+        \log_{
+            {\color{9cdcfe}{m}}
+        }
+        {\color{ffd700}{(
+            {\color{9cdcfe}{x}}
+        )}}
+    }}
+    \\[3ex]
+    {\color{9cdcfe}{x}}
+    \mathrel{\color{c586c0}{=}}
+    {\color{9cdcfe}{y}}
+    \mathrel{\color{c586c0}{\bigwedge}}
+    {\color{9cdcfe}{y}}
+    \mathrel{\color{c586c0}{=}}
+    {\color{9cdcfe}{z}}
+    \mathrel{\color{c586c0}{\implies}}
+    {\color{9cdcfe}{x}}
+    \mathrel{\color{c586c0}{=}}
+    {\color{9cdcfe}{z}}
+    \\[3ex]
+    {\color{ffd700}{(
+        {\color{b5cea8}{9}}
+        \mathbin{\color{569cd6}\cdot}
+        {\color{da70d6}{(
+            {\color{b5cea8}{9}}
+            \mathbin{\color{569cd6}\cdot}
+            {\color{179fff}{(
+                {\color{b5cea8}{9}}
+                \mathbin{\color{569cd6}\cdot}
+                {\color{ffd700}{(
+                    {\color{b5cea8}{9}}
+                    \mathbin{\color{569cd6}\cdot}
+                    {\color{da70d6}{(
+                        {\color{b5cea8}{9}}
+                    )}}
+                )}}
+            )}}
+        )}}
+    )}}
 \end{gathered}
 $$
+
 $\Large\textbf{0.2 ~~ Bar}$
+
 $$
-\def\brA#1{{\color{ffd700}#1}}
-\def\brB#1{{\color{da70d6}#1}}
-\def\brC#1{{\color{179fff}#1}}
-\def\lit#1{{\color{b5cea8}#1}}
-\def\op#1{\mathbin{\color{569cd6}#1}}
-\def\stmt#1{\mathrel{\color{c586c0}#1}}
-\def\var#1{{\color{9cdcfe}#1}}
-\def\const#1{{\color{4fc1ff}#1}}
-\def\fn#1{{\color{dcdcaa}#1}}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{gathered}
-    \op{\frac{\var{x}}{\var{x}}} \stmt{=} \lit{1} \stmt{\textrm{where}} \var{x} \stmt{\ne} \lit{0} \\[3ex]
-    \brA{(\const{z} \op{\cdot} \var{x})}^{\op{\prime}} \stmt{=} \const{z} \op{\cdot} {\var{x}}^{\op{\prime}} \\[3ex]
-    {\lit{e}}^{\theta\op{!}} \\[3ex]
-    \lit{e} \lit{\pi} \lit{\tau} \lit{\varphi} \lit{\varphi} \var{\phi} \var{\theta} \var{\psi}
+    \mathbin{\color{569cd6}
+        \frac{
+            {\color{9cdcfe}{x}}
+        }{
+            {\color{9cdcfe}{x}}
+        }
+    }
+    \mathrel{\color{c586c0}{=}}
+    {\color{b5cea8}{1}}
+    \mathrel{\color{c586c0}{\textrm{where}}}
+    {\color{9cdcfe}{x}}
+    \mathrel{\color{c586c0}{\ne}}
+    {\color{b5cea8}{0}}
+    \\[3ex]
+    {\color{ffd700}{(
+        {\color{4fc1ff}{z}}
+        \mathbin{\color{569cd6}\cdot}
+        {\color{9cdcfe}{x}}
+    )}}^{
+        \mathbin{\color{569cd6}\prime}
+    }
+    \mathrel{\color{c586c0}{=}}
+    {\color{4fc1ff}{z}}
+    \mathbin{\color{569cd6}\cdot}
+    {
+        {\color{9cdcfe}{x}}
+    }^{
+        \mathbin{\color{569cd6}\prime}
+    }
+    \\[3ex]
+    {
+        {\color{b5cea8}{e}}
+    }^{
+        \theta
+        \mathbin{\color{569cd6}!}
+    }
+    \\[3ex]
+    {\color{b5cea8}{e}}
+    {\color{b5cea8}{\pi}}
+    {\color{b5cea8}{\tau}}
+    {\color{b5cea8}{\varphi}}
+    {\color{b5cea8}{\varphi}}
+    {\color{9cdcfe}{\phi}}
+    {\color{9cdcfe}{\theta}}
+    {\color{9cdcfe}{\psi}}
 \end{gathered}
 $$
 
