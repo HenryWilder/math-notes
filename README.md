@@ -67,7 +67,7 @@ $\Large\textbf{0.1 ~~ Foo}$
 
 $$
 \begin{gathered}
-    \mathbin{\color{569cd6}
+    {\color{569cd6}
         \frac{
             {\color{dcdcaa}{
                 \log_{
@@ -88,7 +88,7 @@ $$
             }}
         }
     }
-    \mathrel{\color{c586c0}{=}}
+    \;{\color{c586c0}{=}}\;
     {\color{dcdcaa}{
         \log_{
             {\color{9cdcfe}{m}}
@@ -97,31 +97,31 @@ $$
             {\color{9cdcfe}{x}}
         )}}
     }}
-    \\[3ex]
+    \\~\\
     {\color{9cdcfe}{x}}
-    \mathrel{\color{c586c0}{=}}
+    \;{\color{c586c0}{=}}\;
     {\color{9cdcfe}{y}}
-    \mathrel{\color{c586c0}{\bigwedge}}
+    \;{\color{c586c0}{\bigwedge}}\;
     {\color{9cdcfe}{y}}
-    \mathrel{\color{c586c0}{=}}
+    \;{\color{c586c0}{=}}\;
     {\color{9cdcfe}{z}}
-    \mathrel{\color{c586c0}{\implies}}
+    \;{\color{c586c0}{\implies}}\;
     {\color{9cdcfe}{x}}
-    \mathrel{\color{c586c0}{=}}
+    \;{\color{c586c0}{=}}\;
     {\color{9cdcfe}{z}}
-    \\[3ex]
+    \\~\\
     {\color{ffd700}{(
         {\color{b5cea8}{9}}
-        \mathbin{\color{569cd6}\cdot}
+        \:{\color{569cd6}\cdot}\:
         {\color{da70d6}{(
             {\color{b5cea8}{9}}
-            \mathbin{\color{569cd6}\cdot}
+            \:{\color{569cd6}\cdot}\:
             {\color{179fff}{(
                 {\color{b5cea8}{9}}
-                \mathbin{\color{569cd6}\cdot}
+                \:{\color{569cd6}\cdot}\:
                 {\color{ffd700}{(
                     {\color{b5cea8}{9}}
-                    \mathbin{\color{569cd6}\cdot}
+                    \:{\color{569cd6}\cdot}\:
                     {\color{da70d6}{(
                         {\color{b5cea8}{9}}
                     )}}
@@ -136,43 +136,43 @@ $\Large\textbf{0.2 ~~ Bar}$
 
 $$
 \begin{gathered}
-    \mathbin{\color{569cd6}
+    {\color{569cd6}
         \frac{
             {\color{9cdcfe}{x}}
         }{
             {\color{9cdcfe}{x}}
         }
     }
-    \mathrel{\color{c586c0}{=}}
+    \;{\color{c586c0}{=}}\;
     {\color{b5cea8}{1}}
-    \mathrel{\color{c586c0}{\textrm{where}}}
+    \;{\color{c586c0}{\textrm{where}}}\;
     {\color{9cdcfe}{x}}
-    \mathrel{\color{c586c0}{\ne}}
+    \;{\color{c586c0}{\ne}}\;
     {\color{b5cea8}{0}}
-    \\[3ex]
+    \\~\\
     {\color{ffd700}{(
         {\color{4fc1ff}{z}}
-        \mathbin{\color{569cd6}\cdot}
+        \:{\color{569cd6}\cdot}\:
         {\color{9cdcfe}{x}}
     )}}^{
-        \mathbin{\color{569cd6}\prime}
+        {\color{569cd6}\prime}
     }
-    \mathrel{\color{c586c0}{=}}
+    \;{\color{c586c0}{=}}\;
     {\color{4fc1ff}{z}}
-    \mathbin{\color{569cd6}\cdot}
+    \:{\color{569cd6}\cdot}\:
     {
         {\color{9cdcfe}{x}}
     }^{
-        \mathbin{\color{569cd6}\prime}
+        {\color{569cd6}\prime}
     }
-    \\[3ex]
+    \\~\\
     {
         {\color{b5cea8}{e}}
     }^{
         \theta
-        \mathbin{\color{569cd6}!}
+        {\color{569cd6}!}
     }
-    \\[3ex]
+    \\~\\
     {\color{b5cea8}{e}}
     {\color{b5cea8}{\pi}}
     {\color{b5cea8}{\tau}}
