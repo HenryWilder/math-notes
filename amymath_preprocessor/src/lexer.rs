@@ -2,13 +2,13 @@ use regex::Regex;
 
 pub mod operator;
 pub mod group_ctrl;
-pub mod builtin_word;
+pub mod word;
 pub mod token;
 pub mod error;
 
 pub use operator::*;
 pub use group_ctrl::*;
-pub use builtin_word::*;
+pub use word::*;
 pub use token::*;
 pub use error::LexerError;
 
@@ -63,10 +63,7 @@ impl Lexer {
                 } else if self.rx_number.is_match(&token_str) {
                     Ok(Token::Number(token_str))
                 } else if self.rx_word.is_match(&token_str) {
-                    Ok(Token::Word(match BuiltinWordToken::try_from(&token_str) {
-                        Some(bw_token) => WordToken::Builtin(bw_token),
-                        None => WordToken::Direct(token_str)
-                    }))
+                    Ok(Token::Word(WordToken::from(token_str)))
                 } else {
                     Err(LexerError::UnknownToken { token: token_str.to_string() })
                 }

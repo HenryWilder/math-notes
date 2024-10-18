@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, HashMap};
+use direct::DirectWordToken;
 use regex::Regex;
 use crate::{to_tex::ToTex, lexer::*, parser::parse};
 
@@ -126,8 +127,20 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<Str
         else {
             println!("line: {line}");
 
-            let tokens = lexer.tokenize(line)
-                .map_err(|error| PreprocError::lexer_error(line_number, error))?;
+            let tokens: Vec<_> = lexer.tokenize(line)
+                .map_err(|error| PreprocError::lexer_error(line_number, error))?
+                // Apply semantics
+                .into_iter()
+                .map(|mut token| {
+                    if let Token::Word(WordToken::Direct(DirectWordToken { name, kind })) = &mut token {
+                        if let Some(value) = definitions.get(name) {
+                            _ = kind.insert(*value);
+                        }
+                    }
+                    token
+                })
+                .collect();
+
             println!("tokens: {tokens:#?}");
 
             let syntax_tree = parse(tokens)

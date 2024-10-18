@@ -42,6 +42,7 @@ builtin_word_tokens!{
     #[derive(Debug, Clone, Copy)]
     pub enum BuiltinWordToken {
         Literal {
+            "e"                => E          => r"e",
             "pi"               => Pi         => r"\pi",
             "varphi" | "gold"  => VarPhi     => r"\varphi",
             "none"   | "empty" => VarNothing => r"\varnothing",

@@ -2,16 +2,7 @@ use crate::to_tex::ToTex;
 
 use super::operator::*;
 use super::group_ctrl::*;
-use super::builtin_word::*;
-
-#[derive(Debug, Clone, Copy)]
-pub enum WordToken<'doc> {
-    /// LaTeX is identical to the name
-    Direct(&'doc str),
-
-    /// LaTeX is an associated command
-    Builtin(BuiltinWordToken),
-}
+use super::word::*;
 
 #[derive(Clone, Copy)]
 pub enum Token<'doc> {
@@ -47,12 +38,11 @@ impl<'doc> std::fmt::Debug for Token<'doc> {
 impl<'doc> ToTex for Token<'doc> {
     fn to_tex(self) -> String {
         match self {
-            | Self::Number(token)
-            | Self::Word(WordToken::Direct(token @ "e"))
+            Self::Number(token)
                 => format!(r"\lit{{{token}}}"),
 
-            Self::Word(WordToken::Direct(token))
-                => token.to_string(),
+            Self::Word(WordToken::Direct(dw_token))
+                => dw_token.to_tex(),
 
             Self::Word(WordToken::Builtin(bw_token))
                 => bw_token.to_tex(),
