@@ -76,7 +76,7 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<Str
         .enumerate()
         // Remove comments
         .map(|(n, line)|
-            (n, if let Some(comment_start) = line.find("%") {
+            (n+1, if let Some(comment_start) = line.find("%") {
                 &line[..comment_start]
             } else {
                 line
