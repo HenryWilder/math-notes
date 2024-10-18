@@ -1,3 +1,5 @@
+use crate::to_tex::ToTex;
+
 #[derive(Debug, Clone, Copy)]
 pub enum TrigFn {
     /// sin or csc
@@ -86,29 +88,6 @@ pub enum BuiltinWordToken {
 impl BuiltinWordToken {
     // regex() is not defined, because it is already caught by `rx_word`.
 
-    pub fn into_tex(self) -> &'static str {
-        match self {
-            // constants
-            Self::Pi         => r"\pi",
-            Self::VarPhi     => r"\varphi",
-            Self::VarNothing => r"\varnothing",
-
-            // variables
-            Self::Theta      => r"\theta",
-            Self::Phi        => r"\phi",
-            Self::Psi        => r"\psi",
-
-            // functions
-            Self::Sqrt       => r"\sqrt",
-            Self::Log        => r"\log",
-            Self::Ln         => r"\ln",
-            Self::Sum        => r"\sum",
-            Self::Prod       => r"\prod",
-
-            Self::Trig(trig_fn_token) => trig_fn_token.into_tex(),
-        }
-    }
-
     pub fn try_from(token: &str) -> Option<Self> {
         match token {
             // constants
@@ -131,5 +110,51 @@ impl BuiltinWordToken {
             _ =>  TrigFnToken::try_from(token)
                 .map(|trig| Self::Trig(trig)),
         }
+    }
+}
+
+impl ToTex for BuiltinWordToken {
+    fn to_tex(self) -> String {
+        format!("{}{{{}}}",
+            match self {
+                | Self::Pi
+                | Self::VarPhi
+                | Self::VarNothing
+                    => r"\const",
+
+                | Self::Theta
+                | Self::Phi
+                | Self::Psi
+                    => r"\var",
+
+                | Self::Sqrt
+                | Self::Log
+                | Self::Ln
+                | Self::Sum
+                | Self::Prod
+                | Self::Trig(_)
+                    => r"\fn",
+            },
+            match self {
+                // constants
+                Self::Pi         => r"\pi",
+                Self::VarPhi     => r"\varphi",
+                Self::VarNothing => r"\varnothing",
+        
+                // variables
+                Self::Theta      => r"\theta",
+                Self::Phi        => r"\phi",
+                Self::Psi        => r"\psi",
+        
+                // functions
+                Self::Sqrt       => r"\sqrt",
+                Self::Log        => r"\log",
+                Self::Ln         => r"\ln",
+                Self::Sum        => r"\sum",
+                Self::Prod       => r"\prod",
+        
+                Self::Trig(trig_fn_token) => trig_fn_token.into_tex(),
+            }
+        )
     }
 }

@@ -1,3 +1,5 @@
+use crate::to_tex::ToTex;
+
 use super::operator::*;
 use super::group_ctrl::*;
 use super::builtin_word::*;
@@ -42,20 +44,24 @@ impl<'doc> std::fmt::Debug for Token<'doc> {
     }
 }
 
-impl<'doc> Token<'doc> {
-    pub fn into_tex(self) -> &'doc str {
+impl<'doc> ToTex for Token<'doc> {
+    fn to_tex(self) -> String {
         match self {
-            Self::Word(WordToken::Direct(token)) | Self::Number(token)
-                => token,
+            | Self::Number(token)
+            | Self::Word(WordToken::Direct(token @ "e"))
+                => format!(r"\lit{{{token}}}"),
+
+            Self::Word(WordToken::Direct(token))
+                => token.to_string(),
 
             Self::Word(WordToken::Builtin(bw_token))
-                => bw_token.into_tex(),
+                => bw_token.to_tex(),
 
             Self::Operator(op_token)
-                => op_token.into_tex(),
+                => op_token.to_tex(),
 
             Self::GroupCtrl(gc_token)
-                => gc_token.into_tex(),
+                => gc_token.to_tex(),
         }
     }
 }

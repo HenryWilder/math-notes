@@ -1,3 +1,5 @@
+use crate::to_tex::ToTex;
+
 #[derive(Debug, Clone, Copy)]
 pub enum BracketKind {
     Paren,
@@ -45,21 +47,6 @@ impl GroupCtrlToken {
         tokens
     }
 
-    pub fn into_tex(self) -> &'static str {
-        match (self.kind, self.ctrl) {
-            (BracketKind::Paren, GroupControl::Open ) => r"{\br\lparen{",
-            (BracketKind::Paren, GroupControl::Close) => r"}\rparen}",
-            (BracketKind::Brack, GroupControl::Open ) => r"{\br\lbrack{",
-            (BracketKind::Brack, GroupControl::Close) => r"}\rbrack}",
-            (BracketKind::Brace, GroupControl::Open ) => r"{\br\lbrace{",
-            (BracketKind::Brace, GroupControl::Close) => r"}\rbrace}",
-            (BracketKind::VVert, GroupControl::Open ) => r"{\br\lVert{",
-            (BracketKind::VVert, GroupControl::Close) => r"}\rVert}",
-            (BracketKind::Vert,  GroupControl::Open ) => r"{\br\lvert{",
-            (BracketKind::Vert,  GroupControl::Close) => r"}\rvert}",
-        }
-    }
-
     pub fn try_from(token: &str) -> Option<Self> {
         let kind = match token {
             "(" | ")"     => BracketKind::Paren,
@@ -75,5 +62,22 @@ impl GroupCtrlToken {
             _ => return None,
         };
         Some(Self { kind, ctrl })
+    }
+}
+
+impl ToTex for GroupCtrlToken {
+    fn to_tex(self) -> String {
+        match (self.kind, self.ctrl) {
+            (BracketKind::Paren, GroupControl::Open ) => r"{\br\lparen{",
+            (BracketKind::Paren, GroupControl::Close) => r"}\rparen}",
+            (BracketKind::Brack, GroupControl::Open ) => r"{\br\lbrack{",
+            (BracketKind::Brack, GroupControl::Close) => r"}\rbrack}",
+            (BracketKind::Brace, GroupControl::Open ) => r"{\br\lbrace{",
+            (BracketKind::Brace, GroupControl::Close) => r"}\rbrace}",
+            (BracketKind::VVert, GroupControl::Open ) => r"{\br\lVert{",
+            (BracketKind::VVert, GroupControl::Close) => r"}\rVert}",
+            (BracketKind::Vert,  GroupControl::Open ) => r"{\br\lvert{",
+            (BracketKind::Vert,  GroupControl::Close) => r"}\rvert}",
+        }.to_string()
     }
 }

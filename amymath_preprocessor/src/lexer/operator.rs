@@ -1,3 +1,5 @@
+use crate::to_tex::ToTex;
+
 #[derive(PartialEq, Eq)]
 pub enum NAry {
     /// Binary
@@ -31,12 +33,6 @@ macro_rules! operator_tokens {
                 $(&[$(Self::$variant),*]),*
             ];
 
-            pub fn into_tex(self) -> &'static str {
-                match self {
-                    $($(Self::$variant => $tex,)*)*
-                }
-            }
-
             pub fn try_from(token: &str) -> Option<Self> {
                 match token {
                     $($($(| $token)* => Some(Self::$variant),)*)*
@@ -48,6 +44,14 @@ macro_rules! operator_tokens {
                 match self {
                     $($(Self::$variant => &[$(NAry::$argn),*],)*)*
                 }
+            }
+        }
+
+        impl ToTex for $name {
+            fn to_tex(self) -> String {
+                match self {
+                    $($(Self::$variant => $tex,)*)*
+                }.to_string()
             }
         }
     };

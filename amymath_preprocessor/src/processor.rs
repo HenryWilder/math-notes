@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 use regex::Regex;
-use crate::{lexer::*, parser::parse};
+use crate::{to_tex::ToTex, lexer::*, parser::parse};
 
 pub mod error;
 use error::*;
@@ -36,11 +36,11 @@ enum ContentItem<'doc> {
 
 const CONTENT_ANCHOR: &str = "@{content}";
 
-pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<String, AmymathError> {
+pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<String, PreprocError> {
     let rx_def = Regex::new(r"^(?<kind>fn|let|const)\s+(?<names>(?:[a-zA-Z]+)(?:,\s*[a-zA-Z]+)*)\b").unwrap();
 
     if !template.contains(CONTENT_ANCHOR) {
-        return Err(AmymathError::TemplateMissingContent)
+        return Err(PreprocError::TemplateMissingContent)
     }
 
     let lines = document
@@ -59,7 +59,7 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<Str
 
     let mut meta = BTreeMap::<&str, &str>::from([
         ("author", "Unknown"),
-        ("title", "Unknown"),
+        ("title", "Unnamed"),
     ]);
     let mut definitions = HashMap::<&'doc str, DefKind>::new();
     let mut content = Vec::<ContentItem>::new();
@@ -69,10 +69,11 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<Str
         // Meta item
         if line.starts_with("@") {
             match line[1..].split_once(" ") {
-                // Key-value pair
-                Some((key, value)) => meta.insert(key, value),
-                // Existence vs nonexistence
-                None => meta.insert(&line[1..], ""),
+                Some((key, value)) => {
+                    println!("Meta item: \"{key}\"=\"{value}\"");
+                    meta.insert(key, value);
+                },
+                None => return Err(PreprocError::line_error(line_number, LineErrorKind::InvalidMetaItem)),
             };
         }
         // Heading item
@@ -82,9 +83,10 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<Str
                     assert!(!depth.is_empty(), "Heading should not be created with 0 '#' symbols");
                     assert!(!name.is_empty(), "Heading should not be created without text");
                     let depth = depth.len();
+                    println!("Heading: \"{name}\" Depth: {depth}");
                     Heading{ depth, name }
                 },
-                _ => return Err(AmymathError::InvalidHeading { line_number }),
+                _ => return Err(PreprocError::line_error(line_number, LineErrorKind::InvalidHeading)),
             };
             content.push(ContentItem::Heading(heading));
         }
@@ -104,6 +106,7 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<Str
             let names = names_str.split(",").map(str::trim);
 
             for name in names {
+                println!("Defining \"{name}\" as {kind:?}");
                 definitions.insert(name, kind);
             }
         }
@@ -111,14 +114,16 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<Str
         else {
             println!("line: {line}");
 
-            let tokens = lexer.tokenize(line).map_err(|error| AmymathError::LexerError { line_number, error })?;
+            let tokens = lexer.tokenize(line)
+                .map_err(|error| PreprocError::lexer_error(line_number, error))?;
             println!("tokens: {tokens:#?}");
 
-            let syntax_tree = parse(tokens).map_err(|error| AmymathError::ParseError { line_number, error })?;
-            println!("syntax tree: {syntax_tree:#?}");
+            let syntax_tree = parse(tokens)
+                .map_err(|error| PreprocError::parse_error(line_number, error))?;
+            // println!("syntax tree: {syntax_tree:#?}");
 
-            let tex = syntax_tree.into_tex();
-            println!("syntax tree TeX: {tex}");
+            let tex = syntax_tree.to_tex();
+            // println!("syntax tree TeX: {tex}");
 
             // Append or create
             match content.last_mut() {
@@ -152,6 +157,7 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<Str
     // Insert meta variables into output
     for (key, value) in meta {
         let key_search = format!("@{{{key}}}");
+        println!("Assigning `{key_search}` anchors with \"{value}\"");
         output = output.replace(&key_search, value);
     }
 

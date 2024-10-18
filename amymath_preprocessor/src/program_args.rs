@@ -41,7 +41,7 @@ pub fn get_args(root: PathBuf, mut args: std::env::Args) -> Result<ProgramArgs, 
     }
 
     println!("output path: {:#?}", result.out_path);
-    println!("template document:\n{}", result.template);
+    // println!("template document:\n{}", result.template);
 
     Ok(result)
 }
