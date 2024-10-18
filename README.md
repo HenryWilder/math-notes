@@ -5,7 +5,8 @@ Converts basic math expressions into structured $\LaTeX$ code.
 
 **Note:**
 Use Rust version (`./amymath_preprocessor/`) instead of Python version (`./preprocessor/`).
-The Python version is being depricated due to the lack of static types making refactoring and maintentance difficult. (e.g. )
+The Python version is being depricated due to the lack of static types making refactoring and maintentance difficult.
+(e.g. changing order of tuple items not being reflected nor warned of in consumers of the tuple)
 
 ## Example
 
