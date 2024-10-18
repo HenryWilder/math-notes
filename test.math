@@ -1,7 +1,2 @@
-@title Test
-
-|((5 + (2 / 7)) * 4)| / ((8 + 3))
-
-let x
-
-sin(x) + arcsin(y)
+sqrt[n](x)^n = x
+sqrt[n](x^n) = x

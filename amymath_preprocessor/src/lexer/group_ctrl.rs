@@ -53,10 +53,10 @@ macro_rules! group_ctrl_tokens {
             fn to_tex(self) -> String {
                 match (self.kind, self.ctrl) {
                     $(
-                        (BracketKind::$kind, GroupControl::Open ) => $out_open,
-                        (BracketKind::$kind, GroupControl::Close) => $out_close,
+                        (BracketKind::$kind, GroupControl::Open ) => format!(r"{{\br{{{}}}{{", $out_open),
+                        (BracketKind::$kind, GroupControl::Close) => format!("}}{{{}}}}}", $out_close),
                     )*
-                }.to_string()
+                }
             }
         }
     };
@@ -68,10 +68,10 @@ group_ctrl_tokens!{
 
     #[derive(Debug, Clone, Copy)]
     pub struct GroupCtrlToken {
-        Paren(  "(", ")"  ) => (r"{\br\lparen{", r"}\rparen}"),
-        Brack(  "[", "]"  ) => (r"{\br\lbrack{", r"}\rbrack}"),
-        Brace(  "{", "}"  ) => (r"{\br\lbrace{", r"}\rbrace}"),
-        Vert ("||(", ")||") => ( r"{\br\lVert{", r"}\rVert}" ),
-        VVert( "|(", ")|" ) => ( r"{\br\lvert{", r"}\rvert}" ),
+        Paren(  "(", ")"  ) => (r"\lparen", r"\rparen"),
+        Brack(  "[", "]"  ) => (r"\lbrack", r"\rbrack"),
+        Brace(  "{", "}"  ) => (r"\lbrace", r"\rbrace"),
+        Vert ("||(", ")||") => ( r"\lVert", r"\rVert" ),
+        VVert( "|(", ")|" ) => ( r"\lvert", r"\rvert" ),
     }
 }

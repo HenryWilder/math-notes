@@ -63,18 +63,12 @@
 \NewDocumentCommand{\stmt}{m}{\mathrel{\color[HTML]{c586c0}#1}}
 \NewDocumentCommand{\var}{m}{{\color[HTML]{9cdcfe}#1}}
 \NewDocumentCommand{\const}{m}{{\color[HTML]{4fc1ff}#1}}
+\NewDocumentCommand{\fn}{m}{{\color[HTML]{dcdcaa}#1}}
+\def\where{\mathrel{\textrm{where}}}
 
 \def\R{{\type{\mathbb{R}}}}
 \def\N{{\type{\mathbb{N}}}}
 \def\Z{{\type{\mathbb{Z}}}}
-\NewDocumentCommand{\fn}{md()}{%
-    {\color[HTML]{dcdcaa}%
-        #1%
-        \IfValueT{#2}{%
-            \group(#2)%
-        }%
-    }%
-}
 
 \NewCommandCopy{\builtinBinom}{\binom}
 \RenewDocumentCommand{\binom}{mm}{%

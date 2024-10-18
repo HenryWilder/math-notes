@@ -93,6 +93,12 @@ impl<'doc> ToTex for SyntaxNode<'doc> {
                         lhs.extract_inner_tex(),
                         rhs.extract_inner_tex(),
                     ),
+                OperatorToken::Subscript | OperatorToken::Superscript
+                    => format!(r"{{\ColorReset{{{}}}}}{}{{\ColorReset{{{}}}}}",
+                        lhs.to_tex(),
+                        op.to_tex(),
+                        rhs.to_tex(),
+                    ),
                 _
                     => format!(r"{{\ColorReset{{{}}}}}\op{{{}}}{{\ColorReset{{{}}}}}",
                         lhs.to_tex(),
