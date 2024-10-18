@@ -1,83 +1,77 @@
 use crate::to_tex::ToTex;
 
 #[derive(Debug, Clone, Copy)]
-pub enum BracketKind {
-    Paren,
-    Brack,
-    Brace,
-    Vert,
-    VVert,
-}
-
-#[derive(Debug, Clone, Copy)]
 pub enum GroupControl {
     Open,
     Close,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct GroupCtrlToken {
-    pub kind: BracketKind,
-    pub ctrl: GroupControl,
-}
-
-// macro_rules! group_ctrl_tokens {
-//     {
-//         #[$meta:meta]
-//     } => {
+macro_rules! group_ctrl_tokens {
+    {
+        #[$kind_meta:meta]
+        $kind_vis:vis enum $kind_name:ident;
+        #[$token_meta:meta]
+        $token_vis:vis struct $token_name:ident {
+            $($kind:ident($src_open:literal, $src_close:literal) => ($out_open:literal, $out_close:literal),)*
+        }
+    } => {
+        #[$kind_meta]
+        $kind_vis enum $kind_name {
+            $($kind,)*
+        }
         
-//     };
-// }
+        #[$token_meta]
+        $token_vis struct $token_name {
+            pub kind: $kind_name,
+            pub ctrl: GroupControl,
+        }
 
-impl GroupCtrlToken {
-    pub fn regex_items() -> Vec<String> {
-        let mut tokens = [
-            "(",
-            ")",
-            "[",
-            "]",
-            "{",
-            "}",
-            "||(",
-            ")||",
-            "|(",
-            ")|",
-        ].into_iter().map(regex::escape).collect::<Vec<_>>();
-        tokens.sort_by(|a, b| b.len().cmp(&a.len()));
-        tokens
-    }
-
-    pub fn try_from(token: &str) -> Option<Self> {
-        let kind = match token {
-            "(" | ")"     => BracketKind::Paren,
-            "[" | "]"     => BracketKind::Brack,
-            "{" | "}"     => BracketKind::Brace,
-            "||(" | ")||" => BracketKind::VVert,
-            "|(" | ")|"   => BracketKind::Vert,
-            _ => return None,
-        };
-        let ctrl = match token {
-            "(" | "[" | "{" | "||(" | "|(" => GroupControl::Open,
-            ")" | "]" | "}" | ")||" | ")|" => GroupControl::Close,
-            _ => return None,
-        };
-        Some(Self { kind, ctrl })
-    }
+        impl GroupCtrlToken {
+            pub fn regex_items() -> Vec<String> {
+                let mut tokens = [
+                    $($src_open, $src_close,)*
+                ].into_iter().map(regex::escape).collect::<Vec<_>>();
+                tokens.sort_by(|a, b| b.len().cmp(&a.len()));
+                tokens
+            }
+        
+            pub fn try_from(token: &str) -> Option<Self> {
+                let kind = match token {
+                    $($src_open | $src_close => BracketKind::$kind,)*
+                    _ => return None,
+                };
+                let ctrl = match token {
+                    $($src_open )|* => GroupControl::Open,
+                    $($src_close)|* => GroupControl::Close,
+                    _ => return None,
+                };
+                Some(Self { kind, ctrl })
+            }
+        }
+        
+        impl ToTex for GroupCtrlToken {
+            fn to_tex(self) -> String {
+                match (self.kind, self.ctrl) {
+                    $(
+                        (BracketKind::$kind, GroupControl::Open ) => $out_open,
+                        (BracketKind::$kind, GroupControl::Close) => $out_close,
+                    )*
+                }.to_string()
+            }
+        }
+    };
 }
 
-impl ToTex for GroupCtrlToken {
-    fn to_tex(self) -> String {
-        match (self.kind, self.ctrl) {
-            (BracketKind::Paren, GroupControl::Open ) => r"{\br\lparen{",
-            (BracketKind::Paren, GroupControl::Close) => r"}\rparen}",
-            (BracketKind::Brack, GroupControl::Open ) => r"{\br\lbrack{",
-            (BracketKind::Brack, GroupControl::Close) => r"}\rbrack}",
-            (BracketKind::Brace, GroupControl::Open ) => r"{\br\lbrace{",
-            (BracketKind::Brace, GroupControl::Close) => r"}\rbrace}",
-            (BracketKind::VVert, GroupControl::Open ) => r"{\br\lVert{",
-            (BracketKind::VVert, GroupControl::Close) => r"}\rVert}",
-            (BracketKind::Vert,  GroupControl::Open ) => r"{\br\lvert{",
-            (BracketKind::Vert,  GroupControl::Close) => r"}\rvert}",
-        }.to_string()
+group_ctrl_tokens!{
+    #[derive(Debug, Clone, Copy)]
+    pub enum BracketKind;
+
+    #[derive(Debug, Clone, Copy)]
+    pub struct GroupCtrlToken {
+        Paren(  "(", ")"  ) => (r"{\br\lparen{", r"}\rparen}"),
+        Brack(  "[", "]"  ) => (r"{\br\lbrack{", r"}\rbrack}"),
+        Brace(  "{", "}"  ) => (r"{\br\lbrace{", r"}\rbrace}"),
+        Vert ("||(", ")||") => ( r"{\br\lVert{", r"}\rVert}" ),
+        VVert( "|(", ")|" ) => ( r"{\br\lvert{", r"}\rvert}" ),
     }
 }
