@@ -66,122 +66,128 @@ e pi tau varphi gold phi theta psi
 $\Large\textbf{0.1 ~~ Foo}$
 
 $$
-\begin{gathered}
-    {\color{569cd6}
-        \frac{
-            {\color{dcdcaa}{
-                \log_{
-                    {\color{9cdcfe}{n}}
-                }
-                {\color{ffd700}{(
-                    {\color{9cdcfe}{x}}
-                )}}
-            }}
-        }{
-            {\color{dcdcaa}{
-                \log_{
-                    {\color{9cdcfe}{n}}
-                }
-                {\color{ffd700}{(
-                    {\color{9cdcfe}{m}}
-                )}}
-            }}
-        }
+{\color{569cd6}
+    \frac{
+        {\color{dcdcaa}{
+            \log_{
+                {\color{9cdcfe}{n}}
+            }
+            {\color{ffd700}{(
+                {\color{9cdcfe}{x}}
+            )}}
+        }}
+    }{
+        {\color{dcdcaa}{
+            \log_{
+                {\color{9cdcfe}{n}}
+            }
+            {\color{ffd700}{(
+                {\color{9cdcfe}{m}}
+            )}}
+        }}
     }
-    \\;{\color{c586c0}{=}}\\;
-    {\color{dcdcaa}{
-        \log_{
-            {\color{9cdcfe}{m}}
-        }
-        {\color{ffd700}{(
-            {\color{9cdcfe}{x}}
-        )}}
-    }}
-    \\\\[3ex]
-    {\color{9cdcfe}{x}}
-    \\;{\color{c586c0}{=}}\\;
-    {\color{9cdcfe}{y}}
-    \\;{\color{c586c0}{\bigwedge}}\\;
-    {\color{9cdcfe}{y}}
-    \\;{\color{c586c0}{=}}\\;
-    {\color{9cdcfe}{z}}
-    \\;{\color{c586c0}{\implies}}\\;
-    {\color{9cdcfe}{x}}
-    \\;{\color{c586c0}{=}}\\;
-    {\color{9cdcfe}{z}}
-    \\\\[3ex]
+}
+\\;{\color{c586c0}{=}}\\;
+{\color{dcdcaa}{
+    \log_{
+        {\color{9cdcfe}{m}}
+    }
     {\color{ffd700}{(
+        {\color{9cdcfe}{x}}
+    )}}
+}}
+$$
+
+$$
+{\color{9cdcfe}{x}}
+\\;{\color{c586c0}{=}}\\;
+{\color{9cdcfe}{y}}
+\\;{\color{c586c0}{\bigwedge}}\\;
+{\color{9cdcfe}{y}}
+\\;{\color{c586c0}{=}}\\;
+{\color{9cdcfe}{z}}
+\\;{\color{c586c0}{\implies}}\\;
+{\color{9cdcfe}{x}}
+\\;{\color{c586c0}{=}}\\;
+{\color{9cdcfe}{z}}
+$$
+
+$$
+{\color{ffd700}{(
+    {\color{b5cea8}{9}}
+    \\:{\color{569cd6}\cdot}\\:
+    {\color{da70d6}{(
         {\color{b5cea8}{9}}
         \\:{\color{569cd6}\cdot}\\:
-        {\color{da70d6}{(
+        {\color{179fff}{(
             {\color{b5cea8}{9}}
             \\:{\color{569cd6}\cdot}\\:
-            {\color{179fff}{(
+            {\color{ffd700}{(
                 {\color{b5cea8}{9}}
                 \\:{\color{569cd6}\cdot}\\:
-                {\color{ffd700}{(
+                {\color{da70d6}{(
                     {\color{b5cea8}{9}}
-                    \\:{\color{569cd6}\cdot}\\:
-                    {\color{da70d6}{(
-                        {\color{b5cea8}{9}}
-                    )}}
                 )}}
             )}}
         )}}
     )}}
-\end{gathered}
+)}}
 $$
 
 $\Large\textbf{0.2 ~~ Bar}$
 
 $$
-\begin{gathered}
-    {\color{569cd6}
-        \frac{
-            {\color{9cdcfe}{x}}
-        }{
-            {\color{9cdcfe}{x}}
-        }
-    }
-    \\;{\color{c586c0}{=}}\\;
-    {\color{b5cea8}{1}}
-    \\;{\color{c586c0}{\textrm{where}}}\\;
-    {\color{9cdcfe}{x}}
-    \\;{\color{c586c0}{\ne}}\\;
-    {\color{b5cea8}{0}}
-    \\\\[3ex]
-    {\color{ffd700}{(
-        {\color{4fc1ff}{z}}
-        \\:{\color{569cd6}\cdot}\\:
+{\color{569cd6}
+    \frac{
         {\color{9cdcfe}{x}}
-    )}}^{
-        {\color{569cd6}\prime}
+    }{
+        {\color{9cdcfe}{x}}
     }
-    \\;{\color{c586c0}{=}}\\;
+}
+\\;{\color{c586c0}{=}}\\;
+{\color{b5cea8}{1}}
+\\;{\color{c586c0}{\textrm{where}}}\\;
+{\color{9cdcfe}{x}}
+\\;{\color{c586c0}{\ne}}\\;
+{\color{b5cea8}{0}}
+$$
+
+$$
+{\color{ffd700}{(
     {\color{4fc1ff}{z}}
     \\:{\color{569cd6}\cdot}\\:
-    {
-        {\color{9cdcfe}{x}}
-    }^{
-        {\color{569cd6}\prime}
-    }
-    \\\\[3ex]
-    {
-        {\color{b5cea8}{e}}
-    }^{
-        \theta
-        {\color{569cd6}!}
-    }
-    \\\\[3ex]
+    {\color{9cdcfe}{x}}
+)}}^{
+    {\color{569cd6}\prime}
+}
+\\;{\color{c586c0}{=}}\\;
+{\color{4fc1ff}{z}}
+\\:{\color{569cd6}\cdot}\\:
+{
+    {\color{9cdcfe}{x}}
+}^{
+    {\color{569cd6}\prime}
+}
+$$
+
+$$
+{
     {\color{b5cea8}{e}}
-    {\color{b5cea8}{\pi}}
-    {\color{b5cea8}{\tau}}
-    {\color{b5cea8}{\varphi}}
-    {\color{b5cea8}{\varphi}}
-    {\color{9cdcfe}{\phi}}
-    {\color{9cdcfe}{\theta}}
-    {\color{9cdcfe}{\psi}}
-\end{gathered}
+}^{
+    \theta
+    {\color{569cd6}!}
+}
+$$
+
+$$
+{\color{b5cea8}{e}}
+{\color{b5cea8}{\pi}}
+{\color{b5cea8}{\tau}}
+{\color{b5cea8}{\varphi}}
+{\color{b5cea8}{\varphi}}
+{\color{9cdcfe}{\phi}}
+{\color{9cdcfe}{\theta}}
+{\color{9cdcfe}{\psi}}
 $$
 
 \* **Disclaimer:** This code was processed by hand. The tool is not yet complete enough to produce this output, though it is the goal.
