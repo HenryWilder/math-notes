@@ -88,9 +88,9 @@ m * log[n](x)  = log[n](x^m)                 % Logarithms
 
 ## Quotient of
 
-x^n / x^m             = x^(n - m)                              % Powers
-log[n](x) / log[n](y) = log[y](x)                              % Logarithms
-(f(x) / g(x))'        = (f'(x) * g(x) - f(x) * g'(x)) / g^2(x) % Derivatives
+x^n / x^m             = x^(n - m)                                % Powers
+log[n](x) / log[n](y) = log[y](x)                                % Logarithms
+(f(x) / g(x))'        = (f'(x) * g(x) - f(x) * g'(x)) / (g^2(x)) % Derivatives
 
 ## Power of
 

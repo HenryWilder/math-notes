@@ -72,23 +72,15 @@
 
 \NewCommandCopy{\builtinBinom}{\binom}
 \RenewDocumentCommand{\binom}{mm}{%
-    \ifbool{UseBinomials}{%
-        \brPusha%
-        {\brColor%
-            \builtinBinom{%
-                {\ColorReset #1}%
-            }{%
-                {\ColorReset #2}%
-            }%
-        }%
-        \brPop%
-    }{%
-        \op{\frac{%
-            \var{n}\op!%
+    \brPush%
+    {\brColor%
+        \builtinBinom{%
+            {\ColorReset #1}%
         }{%
-            \var{i}\op! \mul \br({\var{n} \op- \var{i}})\op!%
-        }}%
+            {\ColorReset #2}%
+        }%
     }%
+    \brPop%
 }
 
 \geometry{a4paper}

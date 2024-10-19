@@ -62,6 +62,15 @@ pub enum OpType {
     Assertion,
 }
 
+impl ToTex for OpType {
+    fn to_tex(self) -> String {
+        match self {
+            OpType::Operation => r"\op",
+            OpType::Assertion => r"\stmt",
+        }.to_string()
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum NAry {
     /// Binary
@@ -122,6 +131,9 @@ operator_tokens!{
             #[Operation, Binary|Prefix] "-/+" => Mp    => r"\mp",
             #[Operation, Binary|Prefix] "+"   => Plus  => "+",
             #[Operation, Binary|Prefix] "-"   => Minus => "-",
+        },
+        {
+            #[Operation, Binary] "choose" => Choose => r"\binom",
         },
         {
             #[Operation, Binary] "->" => To   => r"\to",

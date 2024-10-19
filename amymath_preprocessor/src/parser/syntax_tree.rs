@@ -89,7 +89,14 @@ impl<'doc> ToTex for SyntaxNode<'doc> {
                 => token.to_tex().to_owned(),
 
             SyntaxNode::BinOp { lhs, op: op @ OperatorToken::Frac, rhs }
-                => format!(r"\op{{{}{{\ColorReset{{{}}}}}{{\ColorReset{{{}}}}}}}",
+                => format!(r"{}{{{}{{\ColorReset{{{}}}}}{{\ColorReset{{{}}}}}}}",
+                    op.kind().to_tex(),
+                    op.to_tex(),
+                    lhs.extract_inner_tex(),
+                    rhs.extract_inner_tex(),
+                ),
+            SyntaxNode::BinOp { lhs, op: op @ OperatorToken::Choose, rhs }
+                => format!(r"{{{}{{{}}}{{{}}}}}",
                     op.to_tex(),
                     lhs.extract_inner_tex(),
                     rhs.extract_inner_tex(),
@@ -101,26 +108,30 @@ impl<'doc> ToTex for SyntaxNode<'doc> {
                     rhs.extract_inner_tex(),
                 ),
             SyntaxNode::BinOp { lhs, op, rhs }
-                => format!(r"{{{}}}\op{{{}}}{{{}}}",
+                => format!(r"{{{}}}{}{{{}}}{{{}}}",
                     lhs.to_tex(),
+                    op.kind().to_tex(),
                     op.to_tex(),
                     rhs.to_tex(),
                 ),
 
             SyntaxNode::PreOp { op, rhs }
-                => format!(r"\op{{{}}}{{{}}}",
+                => format!(r"{}{{{}}}{{{}}}",
+                    op.kind().to_tex(),
                     op.to_tex(),
                     rhs.to_tex(),
                 ),
 
             SyntaxNode::SufOp { lhs, op: op @ OperatorToken::Prime }
-                => format!(r"{{{}}}^{{\op{{{}}}}}",
+                => format!(r"{{{}}}^{{{}{{{}}}}}",
                     lhs.to_tex(),
+                    op.kind().to_tex(),
                     op.to_tex(),
                 ),
             SyntaxNode::SufOp { lhs, op }
-                => format!(r"{{{}}}\op{{{}}}",
+                => format!(r"{{{}}}{}{{{}}}",
                     lhs.to_tex(),
+                    op.kind().to_tex(),
                     op.to_tex(),
                 ),
 
