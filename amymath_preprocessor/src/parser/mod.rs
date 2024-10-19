@@ -92,14 +92,16 @@ fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) -> Result<(), ParseError> 
         let (i, _) = current_target;
 
         if let SyntaxNode::Token(Token::Operator(op_token)) = tree.0[i] {
-            let lhs = tree.0
-                .get(i - 1)
+            let lhs: Option<&SyntaxNode> =
+                i.checked_sub(1)
+                .and_then(|n| tree.0.get(n))
                 .filter(|token| !matches!(token,
                     SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: _, ctrl: GroupControl::Open }))
                 ));
 
-            let rhs = tree.0
-                .get(i + 1)
+            let rhs: Option<&SyntaxNode> =
+                i.checked_add(1)
+                .and_then(|n| tree.0.get(n))
                 .filter(|token| !matches!(token,
                     SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: _, ctrl: GroupControl::Close }))
                 ));

@@ -85,37 +85,45 @@ impl<'doc> SyntaxNode<'doc> {
 impl<'doc> ToTex for SyntaxNode<'doc> {
     fn to_tex(self) -> String {
         match self {
-            SyntaxNode::Token(token) => token.to_tex().to_owned(),
-            SyntaxNode::BinOp { lhs, op, rhs } => match op {
-                OperatorToken::Frac
-                    => format!(r"\op{{{}{{\ColorReset{{{}}}}}{{\ColorReset{{{}}}}}}}",
-                        op.to_tex(),
-                        lhs.extract_inner_tex(),
-                        rhs.extract_inner_tex(),
-                    ),
-                OperatorToken::Subscript | OperatorToken::Superscript
-                    => format!(r"{{\ColorReset{{{}}}}}{}{{\ColorReset{{{}}}}}",
-                        lhs.to_tex(),
-                        op.to_tex(),
-                        rhs.extract_inner_tex(),
-                    ),
-                _
-                    => format!(r"{{\ColorReset{{{}}}}}\op{{{}}}{{\ColorReset{{{}}}}}",
-                        lhs.to_tex(),
-                        op.to_tex(),
-                        rhs.to_tex(),
-                    ),
-            },
-            SyntaxNode::PreOp { op, rhs }
-                => format!(r"\op{{{}}}{{\ColorReset{{{}}}}}",
+            SyntaxNode::Token(token)
+                => token.to_tex().to_owned(),
+
+            SyntaxNode::BinOp { lhs, op: op @ OperatorToken::Frac, rhs }
+                => format!(r"\op{{{}{{\ColorReset{{{}}}}}{{\ColorReset{{{}}}}}}}",
+                    op.to_tex(),
+                    lhs.extract_inner_tex(),
+                    rhs.extract_inner_tex(),
+                ),
+            SyntaxNode::BinOp { lhs, op: op @ (OperatorToken::Subscript | OperatorToken::Superscript), rhs }
+                => format!(r"{{{}}}{}{{{}}}",
+                    lhs.to_tex(),
+                    op.to_tex(),
+                    rhs.extract_inner_tex(),
+                ),
+            SyntaxNode::BinOp { lhs, op, rhs }
+                => format!(r"{{{}}}\op{{{}}}{{{}}}",
+                    lhs.to_tex(),
                     op.to_tex(),
                     rhs.to_tex(),
                 ),
-            SyntaxNode::SufOp { lhs, op }
-                => format!(r"{{\ColorReset{{{}}}}}\op{{\ColorReset{{{}}}}}",
+
+            SyntaxNode::PreOp { op, rhs }
+                => format!(r"\op{{{}}}{{{}}}",
+                    op.to_tex(),
+                    rhs.to_tex(),
+                ),
+
+            SyntaxNode::SufOp { lhs, op: op @ OperatorToken::Prime }
+                => format!(r"{{{}}}^{{\op{{{}}}}}",
                     lhs.to_tex(),
                     op.to_tex(),
                 ),
+            SyntaxNode::SufOp { lhs, op }
+                => format!(r"{{{}}}\op{{{}}}",
+                    lhs.to_tex(),
+                    op.to_tex(),
+                ),
+
             SyntaxNode::Group(group)
                 => group.to_tex(),
         }
