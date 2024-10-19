@@ -5,41 +5,62 @@ macro_rules! operator_tokens {
         #[$meta:meta]
         $vis:vis enum $name:ident { $(
             { $(
-                #[$kind:ident, $($argn:ident)|+]
+                $(#[$variant_meta:meta])*
+                @[$kind:ident, $(l[$left:literal]r[$right:literal])|+]
                 $($token:literal)|+ => $variant:ident => $tex:literal,
             )* },
         )* }
     } => {
         #[$meta]
         $vis enum $name {
-            $($($variant,)*)*
+            $($(
+                $(#[$variant_meta])*
+                $variant,
+            )*)*
         }
 
         impl $name {
             const TOKENS: &'static [&'static str] = &[
-                $($($($token,)*)*)*
+                $($($(
+                    $token,
+                )*)*)*
             ];
 
             const PRECEDENCES: &'static [&'static [Self]] = &[
-                $(&[$(Self::$variant),*]),*
+                $(
+                    &[$(
+                        Self::$variant,
+                    )*],
+                )*
             ];
 
             pub fn try_from(token: &str) -> Option<Self> {
                 match token {
-                    $($($(| $token)* => Some(Self::$variant),)*)*
+                    $($(
+                        $( $token )|* => Some(Self::$variant),
+                    )*)*
                     _ => None,
                 }
             }
 
             pub fn nary(&self) -> Vec<NAry> {
                 match self {
-                    $($(Self::$variant => vec![$(NAry::$argn),*],)*)*
+                    $($(
+                        Self::$variant => vec![$(
+                            NAry{
+                                n_before: $left,
+                                n_after: $right,
+                            },
+                        )*],
+                    )*)*
                 }
             }
 
             pub fn kind(&self) -> OpType {
                 match self {
-                    $($(Self::$variant => OpType::$kind,)*)*
+                    $($(
+                        Self::$variant => OpType::$kind,
+                    )*)*
                 }
             }
         }
@@ -47,7 +68,9 @@ macro_rules! operator_tokens {
         impl ToTex for $name {
             fn to_tex(self) -> String {
                 match self {
-                    $($(Self::$variant => $tex,)*)*
+                    $($(
+                        Self::$variant => $tex,
+                    )*)*
                 }.to_string()
             }
         }
@@ -72,13 +95,9 @@ impl ToTex for OpType {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum NAry {
-    /// Binary
-    Binary,
-    /// Unary prefix
-    Prefix,
-    /// Unary suffix (postfix)
-    Suffix,
+pub struct NAry {
+    pub n_before: usize,
+    pub n_after: usize,
 }
 
 impl OperatorToken {
@@ -112,88 +131,197 @@ operator_tokens!{
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub enum OperatorToken {
         {
-            #[Operation, Binary] "_" => Subscript => "_",
+            /// Distinguishment or collection indexing
+            @[Operation, l[1]r[1]]
+            "_" => Subscript => "_",
         },
         {
-            #[Operation, Suffix] "!"   => Factorial => "!",
-            #[Operation, Suffix] "'"   => Prime     => r"\prime",
-            #[Operation, Prefix] "not" => Not       => r"\lnot",
+            @[Operation, l[1]r[0]]
+            "!" => Factorial => "!",
+
+            /// Lagrange derivative notation
+            @[Operation, l[1]r[0]]
+            "'" => Prime => r"\prime",
+
+            /// Logical NOT
+            @[Operation, l[0]r[1]]
+            "not" => Not => r"\lnot",
         },
         {
-            #[Operation, Binary] "^" => Superscript  => "^",
+            /// Exponent
+            @[Operation, l[1]r[1]]
+            "^" => Superscript => "^",
         },
         {
-            #[Operation, Binary] "*" => CDot => r"\cdot",
-            #[Operation, Binary] "/" => Frac => r"\frac",
+            /// Multiplication
+            @[Operation, l[1]r[1]]
+            "*" => CDot => r"\cdot",
+
+            /// Division
+            @[Operation, l[1]r[1]]
+            "/" => Frac => r"\frac",
         },
         {
-            #[Operation, Binary|Prefix] "+/-" => Pm    => r"\pm",
-            #[Operation, Binary|Prefix] "-/+" => Mp    => r"\mp",
-            #[Operation, Binary|Prefix] "+"   => Plus  => "+",
-            #[Operation, Binary|Prefix] "-"   => Minus => "-",
+            /// Addition or subtraction
+            @[Operation, l[1]r[1] | l[0]r[1]]
+            "+/-" => Pm => r"\pm",
+
+            /// Subtraction or addition
+            @[Operation, l[1]r[1] | l[0]r[1]]
+            "-/+" => Mp => r"\mp",
+
+            /// Addition
+            @[Operation, l[1]r[1] | l[0]r[1]]
+            "+" => Plus => "+",
+
+            /// Subtraction or negation
+            @[Operation, l[1]r[1] | l[0]r[1]]
+            "-" => Minus => "-",
         },
         {
-            #[Operation, Binary] "choose" => Choose => r"\binom",
+            /// Binomial coefficient
+            @[Operation, l[1]r[1]]
+            "choose" => Choose => r"\binom",
         },
         {
-            #[Operation, Binary] "->" => To   => r"\to",
-            #[Operation, Binary] "<-" => Gets => r"\gets",
+            /// Limit approach
+            @[Operation, l[1]r[1]]
+            "->" => To => r"\to",
+
+            /// Reserved for future assignment
+            @[Operation, l[1]r[1]]
+            "<-" => Gets => r"\gets",
         },
         {
-            #[Assertion, Binary] ">"  => Gt  => ">",
-            #[Assertion, Binary] ">=" => Ge  => r"\ge",
-            #[Assertion, Binary] "<"  => Lt  => r"<",
-            #[Assertion, Binary] "<=" => Le  => r"\le",
-            #[Assertion, Binary] "in" => In  => r"\in",
-            #[Assertion, Binary] "~"  => Sim => r"\sim",
+            /// Greater than
+            @[Assertion, l[1]r[1]]
+            ">" => Gt => ">",
+
+            /// Greater than or equal to
+            @[Assertion, l[1]r[1]]
+            ">=" => Ge => r"\ge",
+
+            /// Less than
+            @[Assertion, l[1]r[1]]
+            "<" => Lt => r"<",
+
+            /// Less than or equal to
+            @[Assertion, l[1]r[1]]
+            "<=" => Le => r"\le",
+
+            /// Element of
+            @[Assertion, l[1]r[1]]
+            "in" => In => r"\in",
+
+            /// Similar to
+            @[Assertion, l[1]r[1]]
+            "~" => Sim => r"\sim",
         },
         {
-            #[Assertion, Binary] "==" | "="   => Eq     => "=",
-            #[Assertion, Binary] "!=" | "=/=" => Ne     => r"\ne",
-            #[Assertion, Binary] "==="        => Equiv  => r"\equiv",
-            #[Assertion, Binary] "!=="        => NEquiv => r"\nequiv",
+            /// Equality
+            @[Assertion, l[1]r[1]]
+            "==" | "=" => Eq => "=",
+
+            /// Inequality
+            @[Assertion, l[1]r[1]]
+            "!=" | "=/=" => Ne => r"\ne",
+
+            /// Equivalence
+            @[Assertion, l[1]r[1]]
+            "===" => Equiv  => r"\equiv",
+
+            /// Inequivalence
+            @[Assertion, l[1]r[1]]
+            "!==" => NEquiv => r"\nequiv",
         },
         {
-            #[Operation, Binary] "&" | "cap" | "intersection" => Intersection => r"\cap",
+            /// Set intersection
+            @[Operation, l[1]r[1]]
+            "&" | "cap" | "intersection" => Intersection => r"\cap",
         },
         {
-            #[Operation, Binary] "|" | "cup" | "union" => Union => r"\cup",
+            /// Set union
+            @[Operation, l[1]r[1]]
+            "|" | "cup" | "union" => Union => r"\cup",
         },
         {
-            #[Operation, Binary] r"/\"  => Wedge => r"\bigwedge",
-            #[Operation, Binary] "and"  => And   => r"\land",
-            #[Operation, Binary] "nand" => Nand  => r"\lnand",
+            /// Logical AND (large)
+            @[Operation, l[1]r[1]]
+            r"/\" => Wedge => r"\bigwedge",
+
+            /// Logical AND
+            @[Operation, l[1]r[1]]
+            "and" => And => r"\land",
+
+            /// Logical NAND
+            @[Operation, l[1]r[1]]
+            "nand" => Nand => r"\lnand",
         },
         {
-            #[Operation, Binary] "xor"  => Xor  => r"\lxor",
-            #[Operation, Binary] "xnor" => Xnor => r"\lxnor",
+            /// Logical XOR
+            @[Operation, l[1]r[1]]
+            "xor" => Xor => r"\lxor",
+
+            /// Logical XNOR
+            @[Operation, l[1]r[1]]
+            "xnor" => Xnor => r"\lxnor",
         },
         {
-            #[Operation, Binary] r"\/" => Vee => r"\bigvee",
-            #[Operation, Binary] "or"  => Or  => r"\lor",
-            #[Operation, Binary] "nor" => Nor => r"\lnor",
+            /// Logical OR (large)
+            @[Operation, l[1]r[1]]
+            r"\/" => Vee => r"\bigvee",
+
+            /// Logical OR
+            @[Operation, l[1]r[1]]
+            "or" => Or => r"\lor",
+
+            /// Logical NOR
+            @[Operation, l[1]r[1]]
+            "nor" => Nor => r"\lnor",
         },
         {
-            #[Operation, Binary] r"\" => Setminus => r"\setminus",
-            // #[Operation, Binary] ","  => Comma    => ",",
+            /// Difference of sets
+            @[Operation, l[1]r[1]]
+            r"\" => Setminus => r"\setminus",
         },
         {
-            #[Assertion, Binary] ":" => Colon => ":",
+            /// Requirement; "x such that [condition]"
+            @[Assertion, l[1]r[1]]
+            ":" => Colon => ":",
         },
         {
-            #[Assertion, Binary] "|=>" | "|->" => MapsTo   => r"\mapsto",
-            #[Assertion, Binary] "<=|" | "<-|" => MapsFrom => r"\mapsfrom",
+            @[Assertion, l[1]r[1]]
+            "|=>" | "|->" => MapsTo => r"\mapsto",
+
+            @[Assertion, l[1]r[1]]
+            "<=|" | "<-|" => MapsFrom => r"\mapsfrom",
         },
         {
-            #[Assertion, Binary] "==>" | "=>" => Implies   => r"\implies",
-            #[Assertion, Binary] "<=="        => Impliedby => r"\impliedby",
-            #[Assertion, Binary] "<=>"        => Iff       => r"\iff",
+            /// If A then B
+            @[Assertion, l[1]r[1]]
+            "==>" | "=>" => Implies => r"\implies",
+
+            /// If B then A
+            @[Assertion, l[1]r[1]]
+            "<==" => Impliedby => r"\impliedby",
+
+            /// A, B only if A AND B
+            @[Assertion, l[1]r[1]]
+            "<=>" => Iff => r"\iff",
         },
         {
-            #[Assertion, Binary] "so" => Therefore => r"\therefore",
+            /// Because of A, B is true
+            @[Assertion, l[1]r[1]]
+            "so" => Therefore => r"\therefore",
+
+            /// The reason A is true is because B
+            @[Assertion, l[1]r[1]]
+            "bcus" => Because => r"\because",
         },
         {
-            #[Assertion, Binary] "where" => Where => r"\where",
+            /// The statement requires the following condition(s)
+            @[Assertion, l[1]r[1]]
+            "where" => Where => r"\where",
         },
     }
 }

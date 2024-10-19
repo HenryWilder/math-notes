@@ -109,7 +109,7 @@ fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) -> Result<(), ParseError> 
             let nary = op_token.nary();
             for argn in nary {
                 if let Some((range, replacement)) = match (lhs, argn, rhs) {
-                    (Some(lhs), NAry::Binary, Some(rhs)) => {
+                    (Some(lhs), NAry { n_before: 1, n_after: 1 }, Some(rhs)) => {
                         Some(((i - 1)..=(i + 1), SyntaxNode::BinOp {
                             lhs: Box::new(lhs.clone()),
                             op: op_token,
@@ -117,14 +117,14 @@ fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) -> Result<(), ParseError> 
                         }))
                     },
 
-                    (_, NAry::Prefix, Some(rhs)) => {
+                    (_, NAry { n_before: 0, n_after: 1 }, Some(rhs)) => {
                         Some((i..=(i + 1), SyntaxNode::PreOp {
                             op: op_token,
                             rhs: Box::new(rhs.clone()),
                         }))
                     },
 
-                    (Some(lhs), NAry::Suffix, _) => {
+                    (Some(lhs), NAry { n_before: 1, n_after: 0 }, _) => {
                         Some(((i - 1)..=i, SyntaxNode::SufOp {
                             lhs: Box::new(lhs.clone()),
                             op: op_token,

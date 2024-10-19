@@ -60,6 +60,7 @@ builtin_word_tokens!{
             "ln"   => Ln   => r"\ln",
             "sum"  => Sum  => r"\sum",
             "prod" => Prod => r"\prod",
+            "Zeta" => ZZeta => r"\Zeta", // Zeta function
 
                "sin"  =>    Sin  =>    r"\sin",
                "cos"  =>    Cos  =>    r"\cos",
