@@ -97,7 +97,7 @@ impl<'doc> ToTex for SyntaxNode<'doc> {
                     => format!(r"{{\ColorReset{{{}}}}}{}{{\ColorReset{{{}}}}}",
                         lhs.to_tex(),
                         op.to_tex(),
-                        rhs.to_tex(),
+                        rhs.extract_inner_tex(),
                     ),
                 _
                     => format!(r"{{\ColorReset{{{}}}}}\op{{{}}}{{\ColorReset{{{}}}}}",

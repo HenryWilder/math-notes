@@ -145,7 +145,7 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<Str
 
             let syntax_tree = parse(tokens)
                 .map_err(|error| PreprocError::parse_error(line_number, error))?;
-            // println!("syntax tree: {syntax_tree:#?}");
+            println!("syntax tree: {syntax_tree:#?}");
 
             let tex = syntax_tree.to_tex();
             // println!("syntax tree TeX: {tex}");
@@ -174,7 +174,7 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<Str
             }
         )
         .collect::<Vec<_>>()
-        .join("");
+        .join("\n");
 
     // Insert content into output
     let mut output = template.replace(CONTENT_ANCHOR, &content_str);

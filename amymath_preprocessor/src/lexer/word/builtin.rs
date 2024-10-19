@@ -55,7 +55,7 @@ builtin_word_tokens!{
         Function {
             // Todo: Some of these operators, NOT functions.
             // They are currently erroring in LaTeX because they aren't getting their mandatory arguments.
-            "sqrt" => Sqrt => r"\sqrt",
+            "sqrt" => Sqrt => r"\sqrt{}",
             "log"  => Log  => r"\log",
             "ln"   => Ln   => r"\ln",
             "sum"  => Sum  => r"\sum",

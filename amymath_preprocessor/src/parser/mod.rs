@@ -7,7 +7,7 @@ pub mod error;
 use syntax_tree::*;
 use error::ParseError;
 
-fn group_tokens<'doc>(tokens: Vec<Token<'doc>>) -> Result<SyntaxTree<'doc>, ParseError> {
+fn group_subexpressions<'doc>(tokens: Vec<Token<'doc>>) -> Result<SyntaxTree<'doc>, ParseError> {
     let mut stack = Stack::<SyntaxTree>::new();
     stack.push(SyntaxTree::new());
     // Form groups
@@ -23,6 +23,20 @@ fn group_tokens<'doc>(tokens: Vec<Token<'doc>>) -> Result<SyntaxTree<'doc>, Pars
                 let mut group = stack.pop()
                     .ok_or(ParseError::TooManyCloseBrackets)?;
                 group.push_token(token);
+                if let [
+                    SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: opened_with, ctrl: GroupControl::Open  })),
+                    ..,
+                    SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: closed_with, ctrl: GroupControl::Close })),
+                ] = &group.0[..] {
+                    if !opened_with.is_compatible(closed_with) {
+                        return Err(ParseError::BracketMismatch {
+                            opened_with: *opened_with,
+                            closed_with: *closed_with,
+                        });
+                    }
+                } else {
+                    panic!("Group should not be created without open & close delimiters");
+                }
                 stack.top_mut().unwrap().push_group(group);
             },
 
@@ -78,37 +92,54 @@ fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) -> Result<(), ParseError> 
         let (i, _) = current_target;
 
         if let SyntaxNode::Token(Token::Operator(op_token)) = tree.0[i] {
-            let is_lhs_nonnull = i > 0;
-            let is_rhs_nonnull = i < tree.0.len() - 1;
+            let lhs = tree.0
+                .get(i - 1)
+                .filter(|token| !matches!(token,
+                    SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: _, ctrl: GroupControl::Open }))
+                ));
+
+            let rhs = tree.0
+                .get(i + 1)
+                .filter(|token| !matches!(token,
+                    SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: _, ctrl: GroupControl::Close }))
+                ));
+
             let nary = op_token.nary();
             for argn in nary {
-                match (is_lhs_nonnull, argn, is_rhs_nonnull) {
-                    (true, NAry::Binary, true) => {
-                        let drained: Vec<_> = tree.0.drain((i - 1)..=(i + 1)).collect();
-                        let lhs = Box::new(drained[0].clone());
-                        let rhs = Box::new(drained[2].clone());
-                        tree.0.insert(i - 1, SyntaxNode::BinOp { lhs, op: op_token, rhs, });
-                        continue 'a;
+                if let Some((range, replacement)) = match (lhs, argn, rhs) {
+                    (Some(lhs), NAry::Binary, Some(rhs)) => {
+                        Some(((i - 1)..=(i + 1), SyntaxNode::BinOp {
+                            lhs: Box::new(lhs.clone()),
+                            op: op_token,
+                            rhs: Box::new(rhs.clone()),
+                        }))
                     },
 
-                    (_, NAry::Prefix, true) => {
-                        let drained: Vec<_> = tree.0.drain(i..=(i + 1)).collect();
-                        let rhs = Box::new(drained[1].clone());
-                        tree.0.insert(i + 1, SyntaxNode::PreOp { op: op_token, rhs });
-                        continue 'a;
+                    (_, NAry::Prefix, Some(rhs)) => {
+                        Some((i..=(i + 1), SyntaxNode::PreOp {
+                            op: op_token,
+                            rhs: Box::new(rhs.clone()),
+                        }))
                     },
 
-                    (true, NAry::Suffix, _) => {
-                        let drained: Vec<_> = tree.0.drain((i - 1)..=i).collect();
-                        let lhs = Box::new(drained[0].clone());
-                        tree.0.insert(i - 1, SyntaxNode::SufOp { lhs, op: op_token, });
-                        continue 'a;
+                    (Some(lhs), NAry::Suffix, _) => {
+                        Some(((i - 1)..=i, SyntaxNode::SufOp {
+                            lhs: Box::new(lhs.clone()),
+                            op: op_token,
+                        }))
                     },
 
-                    _ => (),
+                    _ => None,
+                } {
+                    tree.0.splice(range, [replacement].into_iter());
+                    continue 'a;
                 }
             }
-            return Err(ParseError::OperatorMissingArguments { is_lhs_nonnull, op_token, is_rhs_nonnull });
+            return Err(ParseError::OperatorMissingArguments {
+                lhs_exists: lhs.is_some(),
+                op_token,
+                rhs_exists: rhs.is_some(),
+            });
         }
         break;
     }
@@ -116,7 +147,7 @@ fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) -> Result<(), ParseError> 
 }
 
 pub fn parse<'doc>(tokens: Vec<Token<'doc>>) -> Result<SyntaxTree<'doc>, ParseError> {
-    let mut tree = group_tokens(tokens)?;
+    let mut tree = group_subexpressions(tokens)?;
     group_operators(&mut tree)?;
     Ok(tree)
 }

@@ -2,14 +2,20 @@ use std::error::Error;
 
 use crate::lexer::operator::OperatorToken;
 
+use super::BracketKind;
+
 #[derive(Debug)]
 pub enum ParseError {
     TooManyCloseBrackets,
     NotEnoughCloseBrackets,
     OperatorMissingArguments{
-        is_lhs_nonnull: bool,
+        lhs_exists: bool,
         op_token: OperatorToken,
-        is_rhs_nonnull: bool,
+        rhs_exists: bool,
+    },
+    BracketMismatch{
+        opened_with: BracketKind,
+        closed_with: BracketKind,
     },
 }
 
@@ -20,10 +26,27 @@ impl std::fmt::Display for ParseError {
                 => write!(f, "More bracket/brace/parentheses groups were closed than opened"),
             ParseError::NotEnoughCloseBrackets
                 => write!(f, "More bracket/brace/parentheses groups were opened than closed"),
-            ParseError::OperatorMissingArguments { is_lhs_nonnull, op_token, is_rhs_nonnull }
+            ParseError::OperatorMissingArguments { lhs_exists, op_token, rhs_exists }
                 => write!(f, "No version of `{op_token:?}` operator takes {} left-hand argument and {} right-hand argument.",
-                    if *is_lhs_nonnull { "1" } else { "no" },
-                    if *is_rhs_nonnull { "1" } else { "no" },
+                    if *lhs_exists { "1" } else { "no" },
+                    if *rhs_exists { "1" } else { "no" },
+                ),
+            ParseError::BracketMismatch { opened_with, closed_with }
+                => write!(f, "Mismatched bracket pair: \"{}\" is incompatible with \"{}\"",
+                    match opened_with {
+                        BracketKind::Paren => "(",
+                        BracketKind::Brack => "[",
+                        BracketKind::Brace => "{",
+                        BracketKind::VVert => "||(",
+                        BracketKind::Vert  => "|(",
+                    },
+                    match closed_with {
+                        BracketKind::Paren => ")",
+                        BracketKind::Brack => "]",
+                        BracketKind::Brace => "}",
+                        BracketKind::VVert => ")||",
+                        BracketKind::Vert  => ")|",
+                    },
                 ),
         }
     }

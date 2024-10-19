@@ -1,21 +1,12 @@
 use crate::to_tex::ToTex;
 
-#[derive(PartialEq, Eq)]
-pub enum NAry {
-    /// Binary
-    Binary,
-    /// Unary prefix
-    Prefix,
-    /// Unary suffix (postfix)
-    Suffix,
-}
-
 macro_rules! operator_tokens {
     {
         #[$meta:meta]
         $vis:vis enum $name:ident { $(
             { $(
-                $($token:literal)|+ => #[$($argn:ident)|+] $variant:ident => $tex:literal,
+                #[$kind:ident, $($argn:ident)|+]
+                $($token:literal)|+ => $variant:ident => $tex:literal,
             )* },
         )* }
     } => {
@@ -45,6 +36,12 @@ macro_rules! operator_tokens {
                     $($(Self::$variant => vec![$(NAry::$argn),*],)*)*
                 }
             }
+
+            pub fn kind(&self) -> OpType {
+                match self {
+                    $($(Self::$variant => OpType::$kind,)*)*
+                }
+            }
         }
 
         impl ToTex for $name {
@@ -55,6 +52,24 @@ macro_rules! operator_tokens {
             }
         }
     };
+}
+
+#[derive(Debug)]
+pub enum OpType {
+    /// Represents an operation (\mathbin)
+    Operation,
+    /// Represents an assertion (\mathrel)
+    Assertion,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum NAry {
+    /// Binary
+    Binary,
+    /// Unary prefix
+    Prefix,
+    /// Unary suffix (postfix)
+    Suffix,
 }
 
 impl OperatorToken {
@@ -88,85 +103,85 @@ operator_tokens!{
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub enum OperatorToken {
         {
-            "_" => #[Binary] Subscript => "_",
+            #[Operation, Binary] "_" => Subscript => "_",
         },
         {
-            "!"   => #[Suffix] Factorial => "!",
-            "'"   => #[Suffix] Prime     => r"\prime",
-            "not" => #[Prefix] Not       => r"\lnot",
+            #[Operation, Suffix] "!"   => Factorial => "!",
+            #[Operation, Suffix] "'"   => Prime     => r"\prime",
+            #[Operation, Prefix] "not" => Not       => r"\lnot",
         },
         {
-            "^" => #[Binary] Superscript  => "^",
+            #[Operation, Binary] "^" => Superscript  => "^",
         },
         {
-            "*" => #[Binary] CDot => r"\cdot",
-            "/" => #[Binary] Frac => r"\frac",
+            #[Operation, Binary] "*" => CDot => r"\cdot",
+            #[Operation, Binary] "/" => Frac => r"\frac",
         },
         {
-            "+/-" => #[Binary|Prefix] Pm    => r"\pm",
-            "-/+" => #[Binary|Prefix] Mp    => r"\mp",
-            "+"   => #[Binary|Prefix] Plus  => "+",
-            "-"   => #[Binary|Prefix] Minus => "-",
+            #[Operation, Binary|Prefix] "+/-" => Pm    => r"\pm",
+            #[Operation, Binary|Prefix] "-/+" => Mp    => r"\mp",
+            #[Operation, Binary|Prefix] "+"   => Plus  => "+",
+            #[Operation, Binary|Prefix] "-"   => Minus => "-",
         },
         {
-            "->" => #[Binary] To   => r"\to",
-            "<-" => #[Binary] Gets => r"\gets",
+            #[Operation, Binary] "->" => To   => r"\to",
+            #[Operation, Binary] "<-" => Gets => r"\gets",
         },
         {
-            ">"  => #[Binary] Gt  => ">",
-            ">=" => #[Binary] Ge  => r"\ge",
-            "<"  => #[Binary] Lt  => r"<",
-            "<=" => #[Binary] Le  => r"\le",
-            "in" => #[Binary] In  => r"\in",
-            "~"  => #[Binary] Sim => r"\sim",
+            #[Assertion, Binary] ">"  => Gt  => ">",
+            #[Assertion, Binary] ">=" => Ge  => r"\ge",
+            #[Assertion, Binary] "<"  => Lt  => r"<",
+            #[Assertion, Binary] "<=" => Le  => r"\le",
+            #[Assertion, Binary] "in" => In  => r"\in",
+            #[Assertion, Binary] "~"  => Sim => r"\sim",
         },
         {
-            "==" | "="   => #[Binary] Eq     => "=",
-            "!=" | "=/=" => #[Binary] Ne     => r"\ne",
-            "==="        => #[Binary] Equiv  => r"\equiv",
-            "!=="        => #[Binary] NEquiv => r"\nequiv",
+            #[Assertion, Binary] "==" | "="   => Eq     => "=",
+            #[Assertion, Binary] "!=" | "=/=" => Ne     => r"\ne",
+            #[Assertion, Binary] "==="        => Equiv  => r"\equiv",
+            #[Assertion, Binary] "!=="        => NEquiv => r"\nequiv",
         },
         {
-            "&" | "cap" | "intersection" => #[Binary] Intersection => r"\cap",
+            #[Operation, Binary] "&" | "cap" | "intersection" => Intersection => r"\cap",
         },
         {
-            "|" | "cup" | "union" => #[Binary] Union => r"\cup",
+            #[Operation, Binary] "|" | "cup" | "union" => Union => r"\cup",
         },
         {
-            r"/\"  => #[Binary] Wedge => r"\bigwedge",
-            "and"  => #[Binary] And   => r"\land",
-            "nand" => #[Binary] Nand  => r"\lnand",
+            #[Operation, Binary] r"/\"  => Wedge => r"\bigwedge",
+            #[Operation, Binary] "and"  => And   => r"\land",
+            #[Operation, Binary] "nand" => Nand  => r"\lnand",
         },
         {
-            "xor"  => #[Binary] Xor  => r"\lxor",
-            "xnor" => #[Binary] Xnor => r"\lxnor",
+            #[Operation, Binary] "xor"  => Xor  => r"\lxor",
+            #[Operation, Binary] "xnor" => Xnor => r"\lxnor",
         },
         {
-            r"\/" => #[Binary] Vee => r"\bigvee",
-            "or"  => #[Binary] Or  => r"\lor",
-            "nor" => #[Binary] Nor => r"\lnor",
+            #[Operation, Binary] r"\/" => Vee => r"\bigvee",
+            #[Operation, Binary] "or"  => Or  => r"\lor",
+            #[Operation, Binary] "nor" => Nor => r"\lnor",
         },
         {
-            r"\" => #[Binary] Setminus => r"\setminus",
-            ","  => #[Binary] Comma    => ",",
+            #[Operation, Binary] r"\" => Setminus => r"\setminus",
+            // #[Operation, Binary] ","  => Comma    => ",",
         },
         {
-            ":" => #[Binary] Colon => ":",
+            #[Assertion, Binary] ":" => Colon => ":",
         },
         {
-            "|=>" | "|->" => #[Binary] MapsTo   => r"\mapsto",
-            "<=|" | "<-|" => #[Binary] MapsFrom => r"\mapsfrom",
+            #[Assertion, Binary] "|=>" | "|->" => MapsTo   => r"\mapsto",
+            #[Assertion, Binary] "<=|" | "<-|" => MapsFrom => r"\mapsfrom",
         },
         {
-            "==>" | "=>" => #[Binary] Implies   => r"\implies",
-            "<=="        => #[Binary] Impliedby => r"\impliedby",
-            "<=>"        => #[Binary] Iff       => r"\iff",
+            #[Assertion, Binary] "==>" | "=>" => Implies   => r"\implies",
+            #[Assertion, Binary] "<=="        => Impliedby => r"\impliedby",
+            #[Assertion, Binary] "<=>"        => Iff       => r"\iff",
         },
         {
-            "so" => #[Binary] Therefore => r"\therefore",
+            #[Assertion, Binary] "so" => Therefore => r"\therefore",
         },
         {
-            "where" => #[Binary] Where => r"\where",
+            #[Assertion, Binary] "where" => Where => r"\where",
         },
     }
 }

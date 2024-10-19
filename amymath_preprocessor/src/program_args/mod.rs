@@ -3,7 +3,7 @@ use std::{fs::{read_to_string, File}, path::PathBuf};
 pub mod error;
 use error::ArgsError;
 
-const DEFAULT_TEMPLATE: &str = include_str!("template.sty");
+const DEFAULT_TEMPLATE: &str = include_str!("../template.sty");
 
 pub struct ProgramArgs {
     pub source: String,
