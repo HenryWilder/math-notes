@@ -1,9 +1,14 @@
 use regex::Regex;
 
+/// Operator tokens.
 pub mod operator;
+/// Delimited group tokens.
 pub mod group_ctrl;
+/// Variable/constant/function tokens.
 pub mod word;
+/// Generic Token type.
 pub mod token;
+/// Lexer error module.
 pub mod error;
 
 pub use operator::*;
@@ -12,6 +17,7 @@ pub use word::*;
 pub use token::*;
 pub use error::LexerError;
 
+/// The machine that breaks a document string into tokens.
 pub struct Lexer {
     rx_word: Regex,
     rx_number: Regex,
@@ -19,6 +25,9 @@ pub struct Lexer {
 }
 
 impl Lexer {
+    /// Constructs a new lexer, initializing the regex functions.
+    ///
+    /// ...Because regex can't be precompiled in Rust :/
     pub fn new() -> Self {
         const RX_WORD_STR: &str = r"\b[a-zA-Z]+\b";
         let rx_word = Regex::new(RX_WORD_STR).unwrap();
@@ -51,6 +60,7 @@ impl Lexer {
         }
     }
 
+    /// Break a document string into tokens.
     pub fn tokenize<'doc>(&'_ self, line: &'doc str) -> Result<Vec<Token<'doc>>, LexerError> {
         let tokens = self.rx_tokenize
             .find_iter(line)

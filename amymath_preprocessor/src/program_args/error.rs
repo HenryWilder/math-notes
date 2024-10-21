@@ -1,12 +1,18 @@
 use std::error::Error;
 
+/// An error that occurs while extracting command line data.
 #[derive(Debug)]
 pub enum ArgsError {
+    /// A standard IO error.
     IOError(std::io::Error),
+    /// No source document provided.
     MissingSource,
+    /// A key was given, but no value to go with it.
     MissingKVPValue {
+        /// The valueless key that was given.
         key: &'static str,
     },
+    /// An unexpected argument was provided.
     UnknownArg(String)
 }
 

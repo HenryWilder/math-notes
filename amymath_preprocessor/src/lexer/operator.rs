@@ -1,17 +1,52 @@
-use crate::to_tex::ToTex;
+use crate::{to_tex::ToTex, parser::syntax_tree::SyntaxNode};
+
+macro_rules! as_one {
+    ($item:tt) => {
+        1
+    }
+}
+
+macro_rules! const_len {
+    ($($item:tt),*) => {
+        0 $(+ as_one!($item))*
+    };
+}
+
+macro_rules! op_fmt_pat {
+    (($name:ident)) => {
+        $name
+    };
+
+    ($name:ident) => {
+        $name
+    };
+}
+
+macro_rules! op_fmt_arg {
+    ($name:ident) => {
+        $name.to_tex()
+    };
+
+    (($name:ident)) => {
+        $name.extract_inner().to_tex()
+    };
+}
 
 macro_rules! operator_tokens {
     {
-        #[$meta:meta]
+        $(#[$meta:meta])*
         $vis:vis enum $name:ident { $(
             { $(
                 $(#[$variant_meta:meta])*
-                @[$kind:ident, $(l[$left:literal]r[$right:literal])|+]
+                @$kind:ident
                 $($token:literal)|+ => $variant:ident => $tex:literal,
+                $(
+                    ([$($lhs_fmt:tt),*] $op_fmt:ident $(<$kind_fmt:ident>)? [$($rhs_fmt:tt),*]) => $nary_fmt:literal,
+                )+
             )* },
         )* }
     } => {
-        #[$meta]
+        $(#[$meta])*
         $vis enum $name {
             $($(
                 $(#[$variant_meta])*
@@ -34,6 +69,7 @@ macro_rules! operator_tokens {
                 )*
             ];
 
+            /// Try to construct an operator token. Returns `None` if the token isn't an operator.
             pub fn try_from(token: &str) -> Option<Self> {
                 match token {
                     $($(
@@ -43,19 +79,50 @@ macro_rules! operator_tokens {
                 }
             }
 
-            pub fn nary(&self) -> Vec<NAry> {
+            /// The lookaround range of the operator.
+            ///
+            /// The range is relative to the operator.
+            pub fn nary(&self) -> Vec<(usize, usize)> {
                 match self {
                     $($(
                         Self::$variant => vec![$(
-                            NAry{
-                                n_before: $left,
-                                n_after: $right,
-                            },
+                            (
+                                const_len!($($lhs_fmt)*),
+                                const_len!($($rhs_fmt)*)
+                            ),
                         )*],
                     )*)*
                 }
             }
 
+            /// Format the operator with its arguments as TeX.
+            ///
+            /// This method is on the operator token itself instead of in the syntax tree because
+            /// different operator tokens have different formatting requirements
+            pub fn format(&self, lhs: Vec<SyntaxNode<'_>>, rhs: Vec<SyntaxNode<'_>>) -> String {
+                match (self, &lhs[..], &rhs[..]) {
+                    $($($(
+                        (Self::$variant, [$(op_fmt_pat!($lhs_fmt)),*], [$(op_fmt_pat!($rhs_fmt)),*]) => {
+                            let $op_fmt: String = self.to_tex();
+                            $(
+                                let $kind_fmt: String = self.kind().to_tex();
+                            )?
+                            $(
+                                let op_fmt_pat!($lhs_fmt) = $lhs_fmt.clone();
+                                let op_fmt_pat!($lhs_fmt) = op_fmt_arg!($lhs_fmt);
+                            )*
+                            $(
+                                let op_fmt_pat!($rhs_fmt) = $rhs_fmt.clone();
+                                let op_fmt_pat!($rhs_fmt) = op_fmt_arg!($rhs_fmt);
+                            )*
+                            format!($nary_fmt)
+                        },
+                    )*)*)*
+                    _ => unimplemented!("No operator at the time of writing supports the arguments `{lhs:?} op {rhs:?}`. Has {self:?} been correctly implemented?"),
+                }
+            }
+
+            /// Whether the operator is an assertion or operation.
             pub fn kind(&self) -> OpType {
                 match self {
                     $($(
@@ -77,6 +144,7 @@ macro_rules! operator_tokens {
     };
 }
 
+/// Whether the [`OperatorToken`] is an operator or assertion
 #[derive(Debug)]
 pub enum OpType {
     /// Represents an operation (\mathbin)
@@ -94,13 +162,8 @@ impl ToTex for OpType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct NAry {
-    pub n_before: usize,
-    pub n_after: usize,
-}
-
 impl OperatorToken {
+    /// Lists every source token with regex escaping
     pub fn regex_items() -> Vec<String> {
         let mut tokens: Vec<_> = Self::TOKENS
             .iter()
@@ -115,6 +178,7 @@ impl OperatorToken {
         tokens
     }
 
+    /// The order in which the operator should be evaluated
     pub fn precedence(&self) -> usize {
         Self::PRECEDENCES.iter()
             .enumerate()
@@ -122,206 +186,238 @@ impl OperatorToken {
             .unwrap()
     }
 
+    /// How much the operator wants to bind with its current arguments.
+    /// Higher binding power ops will clump with arguments before allowing lower binding power ops to see them.
     pub fn bind_power(&self) -> usize {
         Self::PRECEDENCES.len() - self.precedence()
     }
 }
 
 operator_tokens!{
+    /// A token that specifically represents an operator.
+    /// Operators look around to find their arguments.
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub enum OperatorToken {
         {
             /// Distinguishment or collection indexing
-            @[Operation, l[1]r[1]]
-            "_" => Subscript => "_",
+            @Operation "_" => Subscript => "_",
+            ([l0] op [(r0)]) => r"{{{l0}}}{op}{{{r0}}}",
         },
         {
-            @[Operation, l[1]r[0]]
-            "!" => Factorial => "!",
+            /// Factorial
+            @Operation "!" => Factorial => "!",
+            ([l0] op<kind> []) => r"{{{l0}}}{kind}{{{op}}}",
 
             /// Lagrange derivative notation
-            @[Operation, l[1]r[0]]
-            "'" => Prime => r"\prime",
+            @Operation "'" => Prime => r"\prime",
+            ([l0] op<kind> []) => r"{{{l0}}}^{{{kind}{{{op}}}}}",
 
             /// Logical NOT
-            @[Operation, l[0]r[1]]
-            "not" => Not => r"\lnot",
+            @Operation "not" => Not => r"\lnot",
+            ([] op<kind> [r0]) => r"{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// Exponent
-            @[Operation, l[1]r[1]]
-            "^" => Superscript => "^",
+            @Operation "^" => Superscript => "^",
+            ([base] op<kind> [(power)]) => r"{{{base}}}{kind}{{{op}}}{{{power}}}",
         },
         {
             /// Multiplication
-            @[Operation, l[1]r[1]]
-            "*" => CDot => r"\cdot",
+            @Operation "*" => CDot => r"\cdot",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Division
-            @[Operation, l[1]r[1]]
-            "/" => Frac => r"\frac",
+            @Operation "/" => Frac => r"\frac",
+            ([(numer)] op<kind> [(denom)]) => r"{kind}{{{op}{{{numer}}}{{{denom}}}}}",
         },
         {
             /// Addition or subtraction
-            @[Operation, l[1]r[1] | l[0]r[1]]
-            "+/-" => Pm => r"\pm",
+            @Operation "+/-" => Pm => r"\pm",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
+            ([] op<kind> [r0]) => r"{kind}{{{op}}}{{{r0}}}",
 
             /// Subtraction or addition
-            @[Operation, l[1]r[1] | l[0]r[1]]
-            "-/+" => Mp => r"\mp",
+            @Operation "-/+" => Mp => r"\mp",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
+            ([] op<kind> [r0]) => r"{kind}{{{op}}}{{{r0}}}",
 
             /// Addition
-            @[Operation, l[1]r[1] | l[0]r[1]]
-            "+" => Plus => "+",
+            @Operation "+" => Plus => "+",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
+            ([] op<kind> [r0]) => r"{kind}{{{op}}}{{{r0}}}",
 
             /// Subtraction or negation
-            @[Operation, l[1]r[1] | l[0]r[1]]
-            "-" => Minus => "-",
+            @Operation "-" => Minus => "-",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
+            ([] op<kind> [r0]) => r"{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// Binomial coefficient
-            @[Operation, l[1]r[1]]
-            "choose" => Choose => r"\binom",
+            @Operation "choose" => Choose => r"\binom",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// Limit approach
-            @[Operation, l[1]r[1]]
-            "->" => To => r"\to",
+            @Operation "->" => To => r"\to",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Reserved for future assignment
-            @[Operation, l[1]r[1]]
-            "<-" => Gets => r"\gets",
+            @Operation "<-" => Gets => r"\gets",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// Greater than
-            @[Assertion, l[1]r[1]]
-            ">" => Gt => ">",
+            @Assertion ">" => Gt => ">",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Greater than or equal to
-            @[Assertion, l[1]r[1]]
-            ">=" => Ge => r"\ge",
+            @Assertion ">=" => Ge => r"\ge",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Less than
-            @[Assertion, l[1]r[1]]
-            "<" => Lt => r"<",
+            @Assertion "<" => Lt => r"<",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Less than or equal to
-            @[Assertion, l[1]r[1]]
-            "<=" => Le => r"\le",
+            @Assertion "<=" => Le => r"\le",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Element of
-            @[Assertion, l[1]r[1]]
-            "in" => In => r"\in",
+            @Assertion "in" => In => r"\in",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Similar to
-            @[Assertion, l[1]r[1]]
-            "~" => Sim => r"\sim",
+            @Assertion "~" => Sim => r"\sim",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
+        },
+        {
+            /// For all
+            @Assertion "for all" => Forall => r"\forall",
+            ([] op<kind> [r0]) => r"{kind}{{{op}}}{{{r0}}}",
+
+            /// There exists
+            @Assertion "exists" => Exists => r"\exists",
+            ([] op<kind> [r0]) => r"{kind}{{{op}}}{{{r0}}}",
+
+            /// There does not exist
+            @Assertion "exists no" => NExists => r"\nexists",
+            ([] op<kind> [r0]) => r"{kind}{{{op}}}{{{r0}}}",
+
+            /// There exists a unique
+            @Assertion "!exists" => ExistsUnique => r"!\exists",
+            ([] op<kind> [r0]) => r"{kind}{{{op}}}{{{r0}}}",
+
+            /// There does not exist a unique
+            @Assertion "!exists no" => NExistsUnique => r"!\nexists",
+            ([] op<kind> [r0]) => r"{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// Equality
-            @[Assertion, l[1]r[1]]
-            "==" | "=" => Eq => "=",
+            @Assertion "==" | "=" => Eq => "=",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Inequality
-            @[Assertion, l[1]r[1]]
-            "!=" | "=/=" => Ne => r"\ne",
+            @Assertion "!=" | "=/=" => Ne => r"\ne",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Equivalence
-            @[Assertion, l[1]r[1]]
-            "===" => Equiv  => r"\equiv",
+            @Assertion "===" => Equiv  => r"\equiv",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Inequivalence
-            @[Assertion, l[1]r[1]]
-            "!==" => NEquiv => r"\nequiv",
+            @Assertion "!==" => NEquiv => r"\nequiv",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// Set intersection
-            @[Operation, l[1]r[1]]
-            "&" | "cap" | "intersection" => Intersection => r"\cap",
+            @Operation "&" | "cap" | "intersection" => Intersection => r"\cap",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// Set union
-            @[Operation, l[1]r[1]]
-            "|" | "cup" | "union" => Union => r"\cup",
+            @Operation "|" | "cup" | "union" => Union => r"\cup",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// Logical AND (large)
-            @[Operation, l[1]r[1]]
-            r"/\" => Wedge => r"\bigwedge",
+            @Operation r"/\" => Wedge => r"\bigwedge",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Logical AND
-            @[Operation, l[1]r[1]]
-            "and" => And => r"\land",
+            @Operation "and" => And => r"\land",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Logical NAND
-            @[Operation, l[1]r[1]]
-            "nand" => Nand => r"\lnand",
+            @Operation "nand" => Nand => r"\lnand",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// Logical XOR
-            @[Operation, l[1]r[1]]
-            "xor" => Xor => r"\lxor",
+            @Operation "xor" => Xor => r"\lxor",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Logical XNOR
-            @[Operation, l[1]r[1]]
-            "xnor" => Xnor => r"\lxnor",
+            @Operation "xnor" => Xnor => r"\lxnor",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// Logical OR (large)
-            @[Operation, l[1]r[1]]
-            r"\/" => Vee => r"\bigvee",
+            @Operation r"\/" => Vee => r"\bigvee",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Logical OR
-            @[Operation, l[1]r[1]]
-            "or" => Or => r"\lor",
+            @Operation "or" => Or => r"\lor",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// Logical NOR
-            @[Operation, l[1]r[1]]
-            "nor" => Nor => r"\lnor",
+            @Operation "nor" => Nor => r"\lnor",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// Difference of sets
-            @[Operation, l[1]r[1]]
-            r"\" => Setminus => r"\setminus",
+            @Operation r"\" => Setminus => r"\setminus",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// Requirement; "x such that [condition]"
-            @[Assertion, l[1]r[1]]
-            ":" => Colon => ":",
+            @Assertion ":" => Colon => ":",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
         {
-            @[Assertion, l[1]r[1]]
-            "|=>" | "|->" => MapsTo => r"\mapsto",
+            /// Mapping
+            @Assertion "|=>" | "|->" => MapsTo => r"\mapsto",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
-            @[Assertion, l[1]r[1]]
-            "<=|" | "<-|" => MapsFrom => r"\mapsfrom",
+            /// Mapping
+            @Assertion "<=|" | "<-|" => MapsFrom => r"\mapsfrom",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// If A then B
-            @[Assertion, l[1]r[1]]
-            "==>" | "=>" => Implies => r"\implies",
+            @Assertion "==>" | "=>" => Implies => r"\implies",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// If B then A
-            @[Assertion, l[1]r[1]]
-            "<==" => Impliedby => r"\impliedby",
+            @Assertion "<==" => Impliedby => r"\impliedby",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// A, B only if A AND B
-            @[Assertion, l[1]r[1]]
-            "<=>" => Iff => r"\iff",
+            @Assertion "<=>" => Iff => r"\iff",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// Because of A, B is true
-            @[Assertion, l[1]r[1]]
-            "so" => Therefore => r"\therefore",
+            @Assertion "so" => Therefore => r"\therefore",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
 
             /// The reason A is true is because B
-            @[Assertion, l[1]r[1]]
-            "bcus" => Because => r"\because",
+            @Assertion "bcus" => Because => r"\because",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
         {
             /// The statement requires the following condition(s)
-            @[Assertion, l[1]r[1]]
-            "where" => Where => r"\where",
+            @Assertion "where" => Where => r"\where",
+            ([l0] op<kind> [r0]) => r"{{{l0}}}{kind}{{{op}}}{{{r0}}}",
         },
     }
 }

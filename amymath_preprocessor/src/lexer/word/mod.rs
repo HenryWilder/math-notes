@@ -1,9 +1,12 @@
+/// Builtin word tokens.
 pub mod builtin;
+/// Direct word tokens.
 pub mod direct;
 
 use builtin::*;
 use direct::*;
 
+/// A token representing a variable, constant, or function.
 #[derive(Debug, Clone, Copy)]
 pub enum WordToken<'doc> {
     /// LaTeX is identical to the name

@@ -3,35 +3,50 @@ use crate::processor::DefKind;
 
 macro_rules! builtin_word_tokens {
     {
-        #[$meta:meta]
+        $(#[$meta:meta])*
         $vis:vis enum $name:ident {
             $($def_kind:ident {
-                $($($src_token:literal)|+ => $token:ident => $out_tex:literal,)*
+                $(
+                    $(#[$token_meta:meta])*
+                    $($src_token:literal)|+ => $token:ident => $out_tex:literal,
+                )*
             },)*
         }
     } => {
-        #[$meta]
-        pub enum $name {
-            $($($token,)*)*
+        $(#[$meta])*
+        $vis enum $name {
+            $($(
+                $(#[$token_meta])*
+                $token,
+            )*)*
         }
 
         impl $name {
+            /// Try to construct a builtin word token. If `None`, the word is not built in.
             pub fn try_from(token: &str) -> Option<Self> {
                 match token {
-                    $($($($src_token)|* => Some(Self::$token),)*)*
+                    $($($(
+                        $src_token)|* => Some(Self::$token),
+                    )*)*
                     _ => None,
                 }
             }
 
+            /// What DefKind the token represents.
             pub fn kind(&self) -> DefKind {
                 match self {
-                    $($(Self::$token)|* => DefKind::$def_kind,)*
+                    $(
+                        $(Self::$token)|* => DefKind::$def_kind,
+                    )*
                 }
             }
 
+            /// Just the command alone, without the DefKind command.
             pub fn command(&self) -> &'static str {
                 match self {
-                    $($(Self::$token => $out_tex,)*)*
+                    $($(
+                        Self::$token => $out_tex,
+                    )*)*
                 }
             }
         }
@@ -39,52 +54,94 @@ macro_rules! builtin_word_tokens {
 }
 
 builtin_word_tokens!{
+    /// A word token whose TeX is a command.
+    ///
+    /// Can also be a mathematical constant.
     #[derive(Debug, Clone, Copy)]
     pub enum BuiltinWordToken {
         Literal {
-            "e"                => E          => r"e",
-            "pi"               => Pi         => r"\pi",
-            "varphi" | "gold"  => VarPhi     => r"\varphi",
-            "none"   | "empty" => VarNothing => r"\varnothing",
+            /// Euler's number
+            "e" => E => r"e",
+            /// Ratio of a circle's diameter to its circumference
+            "pi" => Pi => r"\pi",
+            /// The golden ratio
+            "varphi" | "gold" => VarPhi => r"\varphi",
+            /// The empty set
+            "none" | "empty" => VarNothing => r"\varnothing",
         },
         Variable {
+            /// Typically an angle
             "theta" => Theta => r"\theta",
-            "phi"   => Phi   => r"\phi",
-            "psi"   => Psi   => r"\psi",
+            /// Typically an angle
+            "phi" => Phi => r"\phi",
+            /// Typically an angle
+            "psi" => Psi => r"\psi",
         },
         Function {
             // Todo: Some of these operators, NOT functions.
             // They are currently erroring in LaTeX because they aren't getting their mandatory arguments.
-            "sqrt" => Sqrt => r"\sqrt{}",
-            "log"  => Log  => r"\log",
-            "ln"   => Ln   => r"\ln",
-            "sum"  => Sum  => r"\sum",
-            "prod" => Prod => r"\prod",
-            "Zeta" => ZZeta => r"\Zeta", // Zeta function
 
-               "sin"  =>    Sin  =>    r"\sin",
-               "cos"  =>    Cos  =>    r"\cos",
-               "tan"  =>    Tan  =>    r"\tan",
-               "csc"  =>    Csc  =>    r"\csc",
-               "sec"  =>    Sec  =>    r"\sec",
-               "cot"  =>    Cot  =>    r"\cot",
-               "sinh" =>    SinH =>    r"\sinh",
-               "cosh" =>    CosH =>    r"\cosh",
-               "tanh" =>    TanH =>    r"\tanh",
-               "csch" =>    CscH =>    r"\csch",
-               "sech" =>    SecH =>    r"\sech",
-               "coth" =>    CotH =>    r"\coth",
-            "arcsin"  => ArcSin  => r"\arcsin",
-            "arccos"  => ArcCos  => r"\arccos",
-            "arctan"  => ArcTan  => r"\arctan",
-            "arccsc"  => ArcCsc  => r"\arccsc",
-            "arcsec"  => ArcSec  => r"\arcsec",
-            "arccot"  => ArcCot  => r"\arccot",
+            /// Square (or n) root
+            /// TODO: This is an OPERATOR not a function.
+            "sqrt" => Sqrt => r"\sqrt{}",
+            /// Logarithm
+            "log" => Log => r"\log",
+            /// Natural (base-e) logarithm
+            "ln" => Ln => r"\ln",
+            /// Summation
+            "sum" => Sum => r"\sum",
+            /// Production
+            "prod" => Prod => r"\prod",
+            /// Zeta function
+            "Zeta" => ZZeta => r"\Zeta",
+
+            /// Sine
+            "sin" => Sin => r"\sin",
+            /// Cosine
+            "cos" => Cos => r"\cos",
+            /// Tangent
+            "tan" => Tan => r"\tan",
+            /// Cosecant
+            "csc" => Csc => r"\csc",
+            /// Secant
+            "sec" => Sec => r"\sec",
+            /// Cotangent
+            "cot" => Cot => r"\cot",
+            /// Hyperbolic Sine
+            "sinh" => SinH => r"\sinh",
+            /// Hyperbolic Cosine
+            "cosh" => CosH => r"\cosh",
+            /// Hyperbolic Tangent
+            "tanh" => TanH => r"\tanh",
+            /// Hyperbolic Cosecant
+            "csch" => CscH => r"\csch",
+            /// Hyperbolic Secant
+            "sech" => SecH => r"\sech",
+            /// Hyperbolic Cotangent
+            "coth" => CotH => r"\coth",
+            /// Inverse Sine
+            "arcsin"  => ArcSin => r"\arcsin",
+            /// Inverse Cosine
+            "arccos"  => ArcCos => r"\arccos",
+            /// Inverse Tangent
+            "arctan"  => ArcTan => r"\arctan",
+            /// Inverse Cosecant
+            "arccsc"  => ArcCsc => r"\arccsc",
+            /// Inverse Secant
+            "arcsec"  => ArcSec => r"\arcsec",
+            /// Inverse Cotangent
+            "arccot"  => ArcCot => r"\arccot",
+            /// Inverse Hyperbolic Sine
             "arcsinh" => ArcSinH => r"\arcsinh",
+            /// Inverse Hyperbolic Cosine
             "arccosh" => ArcCosH => r"\arccosh",
+            /// Inverse Hyperbolic Tangent
             "arctanh" => ArcTanH => r"\arctanh",
+            /// Inverse Hyperbolic Cosecant
             "arccsch" => ArcCscH => r"\arccsch",
+            /// Inverse Hyperbolic Secant
             "arcsech" => ArcSecH => r"\arcsech",
+            /// Inverse Hyperbolic Cotangent
             "arccoth" => ArcCotH => r"\arccoth",
         },
     }

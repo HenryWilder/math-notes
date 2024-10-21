@@ -4,6 +4,7 @@ use super::operator::*;
 use super::group_ctrl::*;
 use super::word::*;
 
+/// A single token from the source document.
 #[derive(Clone, Copy)]
 pub enum Token<'doc> {
     /// The name of a variable, constant, or function

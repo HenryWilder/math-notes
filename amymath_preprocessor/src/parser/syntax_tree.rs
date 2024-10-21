@@ -3,81 +3,82 @@ use std::fmt::Debug;
 
 use crate::{to_tex::ToTex, lexer::*};
 
+/// A node in a token tree.
 #[derive(Clone)]
 pub enum SyntaxNode<'doc> {
     /// A normal token
     Token(Token<'doc>),
 
-    /// Binary operator
-    BinOp{
-        lhs: Box<SyntaxNode<'doc>>,
+    /// Operator
+    Operator {
+        /// Left hand side arguments
+        lhs: Vec<SyntaxNode<'doc>>,
+
+        /// Operator
         op:  OperatorToken,
-        rhs: Box<SyntaxNode<'doc>>,
+
+        /// Right hand side arguments
+        rhs: Vec<SyntaxNode<'doc>>,
     },
 
-    /// Unary prefix operator
-    PreOp{
-        op:  OperatorToken,
-        rhs: Box<SyntaxNode<'doc>>,
-    },
+    /// A subtree
+    Group {
+        /// Implied to be [`GroupControl::Open`].
+        open: BracketKind,
 
-    /// Unary suffix (postfix) operator
-    SufOp{
-        lhs: Box<SyntaxNode<'doc>>,
-        op:  OperatorToken,
-    },
+        /// The content within the brackets
+        inner: SyntaxTree<'doc>,
 
-    /// First item is opening bracket, last item is closing bracket
-    Group(SyntaxTree<'doc>),
+        /// Implied to be [`GroupControl::Close`].
+        close: BracketKind,
+    },
 }
 
 impl<'doc> Debug for SyntaxNode<'doc> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Token(arg0)
-                => write!(f, "Token({arg0:?})"),
-            Self::BinOp { lhs, op, rhs }
-                => f.debug_struct("BinOp").field("lhs", lhs).field("op", op).field("rhs", rhs).finish(),
-            Self::PreOp { op, rhs }
-                => f.debug_struct("PreOp").field("op", op).field("rhs", rhs).finish(),
-            Self::SufOp { lhs, op }
-                => f.debug_struct("SufOp").field("lhs", lhs).field("op", op).finish(),
-            Self::Group(arg0)
-                => f.debug_tuple("Group").field(arg0).finish(),
+                => write!(f, "Token({arg0:?})"), // Ensure non-pretty debug
+
+            Self::Operator { lhs, op, rhs }
+                => f.debug_struct("BinOp")
+                    .field("lhs", lhs)
+                    .field("op", op)
+                    .field("rhs", rhs)
+                    .finish(),
+
+            Self::Group{ open, inner: subtree, close }
+                => f.debug_tuple("Group")
+                    .field(open)
+                    .field(subtree)
+                    .field(close)
+                    .finish(),
         }
     }
 }
 
 impl<'doc> SyntaxNode<'doc> {
+    /// Construct a SyntaxNode representing a single Token and nothing else.
     pub fn new_token(token: Token<'doc>) -> Self {
         Self::Token(token)
     }
 
+    /// Construct a SyntaxNode representing a delimited subtree.
     pub fn new_group() -> Self {
-        Self::Group(SyntaxTree::new())
+        Self::Group{
+            open: BracketKind::Blank,
+            inner: SyntaxTree::new(),
+            close: BracketKind::Blank,
+        }
     }
 
-    fn extract_inner_tex(self) -> String {
+    /// If the node within a parenthetical `()` group, get the TeX of the contents of that group without the parentheses.
+    pub fn extract_inner(self) -> SyntaxTree<'doc> {
         match self {
-            SyntaxNode::Group(group) => {
-                let front_offset = match group.0[..] {
-                    [SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: BracketKind::Paren, ctrl: GroupControl::Open })), ..] => 1,
-                    _ => 0,
-                };
-                let back_offset = match group.0[..] {
-                    [.., SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: BracketKind::Paren, ctrl: GroupControl::Close }))] => 1,
-                    _ => 0,
-                };
-                let end = group.0.len() - back_offset;
-                group.0
-                    .into_iter()
-                    .take(end)
-                    .skip(front_offset)
-                    .map(|node| node.to_tex())
-                    .collect::<Vec<String>>()
-                    .join(" ")
-            },
-            _ => self.to_tex(),
+            SyntaxNode::Group{ open: BracketKind::Paren, inner, close: BracketKind::Paren }
+                => inner,
+
+            _ => SyntaxTree(vec![self]),
         }
     }
 }
@@ -88,59 +89,20 @@ impl<'doc> ToTex for SyntaxNode<'doc> {
             SyntaxNode::Token(token)
                 => token.to_tex().to_owned(),
 
-            SyntaxNode::BinOp { lhs, op: op @ OperatorToken::Frac, rhs }
-                => format!(r"{}{{{}{{\ColorReset{{{}}}}}{{\ColorReset{{{}}}}}}}",
-                    op.kind().to_tex(),
-                    op.to_tex(),
-                    lhs.extract_inner_tex(),
-                    rhs.extract_inner_tex(),
-                ),
-            SyntaxNode::BinOp { lhs, op: op @ OperatorToken::Choose, rhs }
-                => format!(r"{{{}{{{}}}{{{}}}}}",
-                    op.to_tex(),
-                    lhs.extract_inner_tex(),
-                    rhs.extract_inner_tex(),
-                ),
-            SyntaxNode::BinOp { lhs, op: op @ (OperatorToken::Subscript | OperatorToken::Superscript), rhs }
-                => format!(r"{{{}}}{}{{{}}}",
-                    lhs.to_tex(),
-                    op.to_tex(),
-                    rhs.extract_inner_tex(),
-                ),
-            SyntaxNode::BinOp { lhs, op, rhs }
-                => format!(r"{{{}}}{}{{{}}}{{{}}}",
-                    lhs.to_tex(),
-                    op.kind().to_tex(),
-                    op.to_tex(),
-                    rhs.to_tex(),
-                ),
+            SyntaxNode::Operator{ lhs, op, rhs } =>
+                op.format(lhs, rhs),
 
-            SyntaxNode::PreOp { op, rhs }
-                => format!(r"{}{{{}}}{{{}}}",
-                    op.kind().to_tex(),
-                    op.to_tex(),
-                    rhs.to_tex(),
+            SyntaxNode::Group{ open, inner, close }
+                => format!("{}{}{}",
+                    GroupCtrlToken::open(open).to_tex(),
+                    inner.to_tex(),
+                    GroupCtrlToken::close(close).to_tex(),
                 ),
-
-            SyntaxNode::SufOp { lhs, op: op @ OperatorToken::Prime }
-                => format!(r"{{{}}}^{{{}{{{}}}}}",
-                    lhs.to_tex(),
-                    op.kind().to_tex(),
-                    op.to_tex(),
-                ),
-            SyntaxNode::SufOp { lhs, op }
-                => format!(r"{{{}}}{}{{{}}}",
-                    lhs.to_tex(),
-                    op.kind().to_tex(),
-                    op.to_tex(),
-                ),
-
-            SyntaxNode::Group(group)
-                => group.to_tex(),
         }
     }
 }
 
+/// A collection adapter for a [`Vec<SyntaxNode>`] with methods for pushing particular types of nodes.
 #[derive(Clone)]
 pub struct SyntaxTree<'doc>(pub Vec<SyntaxNode<'doc>>);
 
@@ -151,14 +113,17 @@ impl<'doc> Debug for SyntaxTree<'doc> {
 }
 
 impl<'doc> SyntaxTree<'doc> {
+    /// Construct an empty tree.
     pub fn new() -> Self {
         Self(Vec::new())
     }
 
-    pub fn push_group(&mut self, group: Self) {
-        self.0.push(SyntaxNode::Group(group));
+    /// Add a delimited subtree to the tree.
+    pub fn push_group(&mut self, open: BracketKind, inner: Vec<SyntaxNode<'doc>>, close: BracketKind) {
+        self.0.push(SyntaxNode::Group { open, inner: Self(inner), close });
     }
 
+    /// Add a [`Token`] to the tree.
     pub fn push_token(&mut self, token: Token<'doc>) {
         self.0.push(SyntaxNode::Token(token));
     }

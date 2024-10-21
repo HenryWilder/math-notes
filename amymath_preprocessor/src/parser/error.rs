@@ -1,20 +1,28 @@
 use std::error::Error;
-
 use crate::lexer::operator::OperatorToken;
+use super::{BracketKind, GroupCtrlToken};
 
-use super::BracketKind;
-
+/// An error that occurs while parsing.
 #[derive(Debug)]
 pub enum ParseError {
+    /// The global scope was popped.
     TooManyCloseBrackets,
+    /// The document ended with excess scopes.
     NotEnoughCloseBrackets,
+    /// An operator in the source has fewer arguments than are valid for that operator.
     OperatorMissingArguments{
-        lhs_exists: bool,
+        /// The number of items available to the left of the operator.
+        num_lhs: usize,
+        /// The operator.
         op_token: OperatorToken,
-        rhs_exists: bool,
+        /// The number of items available to the right of the operator.
+        num_rhs: usize,
     },
+    /// A group was closed with a bracket that isn't compatible with the bracket it was opened with.
     BracketMismatch{
+        /// The bracket that opened the group in the source document.
         opened_with: BracketKind,
+        /// The bracket that closed the group in the source document.
         closed_with: BracketKind,
     },
 }
@@ -26,27 +34,12 @@ impl std::fmt::Display for ParseError {
                 => write!(f, "More bracket/brace/parentheses groups were closed than opened"),
             ParseError::NotEnoughCloseBrackets
                 => write!(f, "More bracket/brace/parentheses groups were opened than closed"),
-            ParseError::OperatorMissingArguments { lhs_exists, op_token, rhs_exists }
-                => write!(f, "No version of `{op_token:?}` operator takes {} left-hand argument and {} right-hand argument.",
-                    if *lhs_exists { "1" } else { "no" },
-                    if *rhs_exists { "1" } else { "no" },
-                ),
+            ParseError::OperatorMissingArguments { num_lhs, op_token, num_rhs }
+                => write!(f, "No version of `{op_token:?}` operator takes {num_lhs} left-hand arguments and {num_rhs} right-hand arguments."),
             ParseError::BracketMismatch { opened_with, closed_with }
                 => write!(f, "Mismatched bracket pair: \"{}\" is incompatible with \"{}\"",
-                    match opened_with {
-                        BracketKind::Paren => "(",
-                        BracketKind::Brack => "[",
-                        BracketKind::Brace => "{",
-                        BracketKind::VVert => "||(",
-                        BracketKind::Vert  => "|(",
-                    },
-                    match closed_with {
-                        BracketKind::Paren => ")",
-                        BracketKind::Brack => "]",
-                        BracketKind::Brace => "}",
-                        BracketKind::VVert => ")||",
-                        BracketKind::Vert  => ")|",
-                    },
+                    GroupCtrlToken::open(*opened_with).source_str(),
+                    GroupCtrlToken::close(*closed_with).source_str(),
                 ),
         }
     }

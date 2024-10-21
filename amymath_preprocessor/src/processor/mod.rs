@@ -3,14 +3,20 @@ use direct::DirectWordToken;
 use regex::Regex;
 use crate::{to_tex::ToTex, lexer::*, parser::parse};
 
+/// `processor` error module.
 pub mod error;
 use error::*;
 
+/// What type of definition this is.
 #[derive(Debug, Clone, Copy)]
 pub enum DefKind {
+    /// A special number (or mathematical constant) that is baked into the formula.
     Literal,
+    /// A number we don't know the value of.
     Variable,
+    /// A number we know the value of.
     Constant,
+    /// A mathematical function like f() or g().
     Function,
 }
 
@@ -25,6 +31,7 @@ impl ToTex for DefKind {
     }
 }
 
+/// The title of a region in the document.
 #[derive(Debug, Clone)]
 struct Heading<'doc> {
     /// Must be between 1 and `Heading::DEPTH_NAMES.len()`
@@ -33,7 +40,7 @@ struct Heading<'doc> {
 }
 
 impl Heading<'_> {
-    pub const DEPTH_NAMES: [&'static str; 4] = [
+    const DEPTH_NAMES: [&'static str; 4] = [
         "chapter",
         "section",
         "subsection",
@@ -41,6 +48,7 @@ impl Heading<'_> {
     ];
 }
 
+/// Types of document lines that persist into the processed document.
 #[derive(Debug, Clone)]
 enum ContentItem<'doc> {
     Heading(Heading<'doc>),
@@ -49,6 +57,12 @@ enum ContentItem<'doc> {
 
 const CONTENT_ANCHOR: &str = "@{content}";
 
+/// Generates the anchor string for a given meta key.
+fn anchor_str(key: &str) -> String {
+    format!("@{{{key}}}")
+}
+
+/// Apply preprocessing to the document.
 pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<String, PreprocError> {
     let rx_def = Regex::new(r"^(?<kind>fn|let|const)\s+(?<names>(?:[a-zA-Z]+)(?:,\s*[a-zA-Z]+)*)\b").unwrap();
 
@@ -181,7 +195,7 @@ pub fn process_document<'doc>(document: &'doc str, template: &str) -> Result<Str
 
     // Insert meta variables into output
     for (key, value) in meta {
-        let key_search = format!("@{{{key}}}");
+        let key_search = anchor_str(key);
         println!("Assigning `{key_search}` anchors with \"{value}\"");
         output = output.replace(&key_search, value);
     }

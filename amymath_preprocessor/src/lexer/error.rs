@@ -1,8 +1,13 @@
 use std::error::Error;
 
+/// An error that occurs while tokenizing a document.
 #[derive(Debug)]
 pub enum LexerError {
-    UnknownToken{ token: String },
+    /// A token that cannot be categoized was found.
+    UnknownToken{
+        /// The token from the source document.
+        token: String,
+    },
 }
 
 impl std::fmt::Display for LexerError {

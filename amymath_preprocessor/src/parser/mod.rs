@@ -1,12 +1,15 @@
 use crate::lexer::*;
 use crate::stack::*;
 
+/// Syntax tree for the parser.
 pub mod syntax_tree;
+/// `parser` error module.
 pub mod error;
 
 use syntax_tree::*;
 use error::ParseError;
 
+/// Groups [`GroupCtrlToken`]-delimited subexpressions
 fn group_subexpressions<'doc>(tokens: Vec<Token<'doc>>) -> Result<SyntaxTree<'doc>, ParseError> {
     let mut stack = Stack::<SyntaxTree>::new();
     stack.push(SyntaxTree::new());
@@ -23,21 +26,27 @@ fn group_subexpressions<'doc>(tokens: Vec<Token<'doc>>) -> Result<SyntaxTree<'do
                 let mut group = stack.pop()
                     .ok_or(ParseError::TooManyCloseBrackets)?;
                 group.push_token(token);
-                if let [
-                    SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: opened_with, ctrl: GroupControl::Open  })),
-                    ..,
-                    SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: closed_with, ctrl: GroupControl::Close })),
-                ] = &group.0[..] {
-                    if !opened_with.is_compatible(closed_with) {
+                let mut iter = group.0.into_iter();
+                if let (
+                    Some(SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: opened_with, ctrl: GroupControl::Open  }))),
+                    Some(SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: closed_with, ctrl: GroupControl::Close }))),
+                 ) = (iter.next(), iter.next_back()) {
+                    if opened_with.is_compatible(&closed_with) {
+                        stack.top_mut().unwrap()
+                            .push_group(
+                                opened_with,
+                                iter.collect::<Vec<SyntaxNode>>(),
+                                closed_with,
+                            );
+                    } else {
                         return Err(ParseError::BracketMismatch {
-                            opened_with: *opened_with,
-                            closed_with: *closed_with,
+                            opened_with,
+                            closed_with,
                         });
                     }
                 } else {
                     panic!("Group should not be created without open & close delimiters");
                 }
-                stack.top_mut().unwrap().push_group(group);
             },
 
             _ => {
@@ -57,15 +66,16 @@ fn group_subexpressions<'doc>(tokens: Vec<Token<'doc>>) -> Result<SyntaxTree<'do
     }
 }
 
+/// Groups operators with their arguments in-place
 fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) -> Result<(), ParseError> {
     // DFS
     for node in tree.0.iter_mut() {
-        if let SyntaxNode::Group(group) = node {
-            group_operators(group)?;
+        if let SyntaxNode::Group{ inner, .. } = node {
+            group_operators(inner)?; // Modify in place
         }
     }
 
-    'a: loop {
+    'operator_loop: loop {
         let operator_tokens: Vec<_> = tree.0
             .iter()
             .enumerate()
@@ -80,7 +90,7 @@ fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) -> Result<(), ParseError> 
 
         let mut current_target = match operator_tokens.first() {
             Some(&(i, op_token)) => (i, op_token.bind_power()),
-            None => break 'a,
+            None => break 'operator_loop,
         };
 
         for (i, op_token) in operator_tokens {
@@ -92,55 +102,35 @@ fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) -> Result<(), ParseError> 
         let (i, _) = current_target;
 
         if let SyntaxNode::Token(Token::Operator(op_token)) = tree.0[i] {
-            let lhs: Option<&SyntaxNode> =
-                i.checked_sub(1)
-                .and_then(|n| tree.0.get(n))
-                .filter(|token| !matches!(token,
-                    SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: _, ctrl: GroupControl::Open }))
-                ));
-
-            let rhs: Option<&SyntaxNode> =
-                i.checked_add(1)
-                .and_then(|n| tree.0.get(n))
-                .filter(|token| !matches!(token,
-                    SyntaxNode::Token(Token::GroupCtrl(GroupCtrlToken { kind: _, ctrl: GroupControl::Close }))
-                ));
-
-            let nary = op_token.nary();
-            for argn in nary {
-                if let Some((range, replacement)) = match (lhs, argn, rhs) {
-                    (Some(lhs), NAry { n_before: 1, n_after: 1 }, Some(rhs)) => {
-                        Some(((i - 1)..=(i + 1), SyntaxNode::BinOp {
-                            lhs: Box::new(lhs.clone()),
-                            op: op_token,
-                            rhs: Box::new(rhs.clone()),
-                        }))
-                    },
-
-                    (_, NAry { n_before: 0, n_after: 1 }, Some(rhs)) => {
-                        Some((i..=(i + 1), SyntaxNode::PreOp {
-                            op: op_token,
-                            rhs: Box::new(rhs.clone()),
-                        }))
-                    },
-
-                    (Some(lhs), NAry { n_before: 1, n_after: 0 }, _) => {
-                        Some(((i - 1)..=i, SyntaxNode::SufOp {
-                            lhs: Box::new(lhs.clone()),
-                            op: op_token,
-                        }))
-                    },
-
-                    _ => None,
-                } {
-                    tree.0.splice(range, [replacement].into_iter());
-                    continue 'a;
+            'nary_loop: for (num_lhs, num_rhs) in op_token.nary() {
+                assert!(!(num_lhs == 0 && num_rhs == 0), "operator must take argument(s)");
+                let start = i.checked_sub(num_lhs);
+                let end = i.checked_add(num_rhs);
+                if let (Some(start), Some(end)) = (start, end) {
+                    let lhs = &tree.0[start..i];
+                    let rhs = &tree.0[(i+1)..=end];
+                    if lhs.len() == num_lhs && lhs.len() == num_rhs {
+                        tree.0.splice(start..=end, [
+                            SyntaxNode::Operator {
+                                lhs: lhs.to_vec(),
+                                op: op_token,
+                                rhs: rhs.to_vec(),
+                            }
+                        ]);
+                        continue 'operator_loop;
+                    } else {
+                        continue 'nary_loop;
+                    }
+                } else {
+                    continue 'nary_loop;
                 }
             }
+
+            // Reached end of `'nary_loop` without finding a match
             return Err(ParseError::OperatorMissingArguments {
-                lhs_exists: lhs.is_some(),
+                num_lhs: i,
                 op_token,
-                rhs_exists: rhs.is_some(),
+                num_rhs: tree.0.len() - i - 1,
             });
         }
         break;
@@ -148,6 +138,7 @@ fn group_operators<'doc>(tree: &mut SyntaxTree<'doc>) -> Result<(), ParseError> 
     Ok(())
 }
 
+/// Apply clumping and lookaround to the document.
 pub fn parse<'doc>(tokens: Vec<Token<'doc>>) -> Result<SyntaxTree<'doc>, ParseError> {
     let mut tree = group_subexpressions(tokens)?;
     group_operators(&mut tree)?;

@@ -24,11 +24,14 @@ macro_rules! group_ctrl_tokens {
 
         $(#[$token_meta])*
         $token_vis struct $token_name {
+            /// What bracket this delimiter represents.
             pub kind: $kind_name,
+            /// Whether the token is opening or closing the group.
             pub ctrl: GroupControl,
         }
 
         impl $token_name {
+            /// A list of the tokens, escaped for regex.
             pub fn regex_items() -> Vec<String> {
                 let mut tokens = [
                     $($src_open, $src_close,)*
@@ -37,6 +40,7 @@ macro_rules! group_ctrl_tokens {
                 tokens
             }
 
+            /// Try to construct a delimiter token. Returns `None` if the token is not a delimiter.
             pub fn try_from(token: &str) -> Option<Self> {
                 Some(Self {
                     kind: match token {
@@ -86,7 +90,9 @@ macro_rules! group_ctrl_tokens {
 /// Whether the delimiter is pushing vs popping scope
 #[derive(Debug, Clone, Copy)]
 pub enum GroupControl {
+    /// The delimiter marks the beginning of a group.
     Open,
+    /// The delimiter marks the ending of a group.
     Close,
 }
 
@@ -100,26 +106,58 @@ group_ctrl_tokens!{
     /// A delimiter marking the start or end of a subexpression.
     #[derive(Debug, Clone, Copy)]
     pub struct GroupCtrlToken {
-        /// Parentheses `(...)`
-        Paren (  "(", ")"  ) => (r"\lparen", r"\rparen"),
-        /// Brackets `[...]`
-        Brack (  "[", "]"  ) => (r"\lbrack", r"\rbrack"),
-        /// Braces `\{...\}`
-        Brace (  "{", "}"  ) => (r"\lbrace", r"\rbrace"),
-        /// <u>V</u>ert `\|...\|`
-        VVert ("||(", ")||") => ( r"\lVert", r"\rVert" ),
-        /// Vert `|...|`
-        Vert  ( "|(", ")|" ) => ( r"\lvert", r"\rvert" ),
+        /// Parentheses `( ... )`
+        Paren  (  "(", ")"  ) => (r"\lparen", r"\rparen"),
+        /// Brackets `[ ... ]`
+        Brack  (  "[", "]"  ) => (r"\lbrack", r"\rbrack"),
+        /// Braces `\{ ... \}`
+        Brace  (  "{", "}"  ) => (r"\lbrace", r"\rbrace"),
+        /// <u>V</u>ertical `\| ... \|`
+        VVert  ("(||", "||)") => ( r"\lVert", r"\rVert" ),
+        /// Vertical `| ... |`
+        Vert   ( "(|", "|)" ) => ( r"\lvert", r"\rvert" ),
+        /// <u>A</u>ngle `\lAngle ... \rAngle`
+        AAngle ( r"(<<", r">>)" ) => ( r"\lAngle", r"\rAngle" ),
+        /// Angle `\langle ... \rangle`
+        Angle  ( r"(<", r">)" ) => ( r"\langle", r"\rangle" ),
+        /// Floor `\lfloor ... \rfloor`
+        Floor  ( r"|_", r"_|" ) => ( r"\lfloor", r"\rfloor" ),
+        /// Ceiling `\lceil ... \rceil`
+        Ceil   ( r"|`", r"`|" ) => ( r"\lceil", r"\rceil" ),
+        /// None `\left. ... \right.`
+        Blank  ( r"(:", r":)" ) => ( ".", "." ),
     }
 }
 
 impl BracketKind {
+    /// Whether the close bracket is compatible with the open bracket.
     pub fn is_compatible(&self, other: &Self) -> bool {
         matches!((self, other),
-            | (BracketKind::Brace, BracketKind::Brace)
+            | (BracketKind::Blank, _)
+            | (_, BracketKind::Blank)
             | (BracketKind::Paren | BracketKind::Brack, BracketKind::Paren | BracketKind::Brack)
+            | (BracketKind::Ceil | BracketKind::Floor, BracketKind::Ceil | BracketKind::Floor)
+            | (BracketKind::Brace, BracketKind::Brace)
             | (BracketKind::VVert, BracketKind::VVert)
             | (BracketKind::Vert,  BracketKind::Vert )
         )
+    }
+}
+
+impl GroupCtrlToken {
+    /// Construct an open bracket of the specifid kind.
+    pub fn open(kind: BracketKind) -> Self {
+        Self {
+            kind,
+            ctrl: GroupControl::Open,
+        }
+    }
+
+    /// Construct a close bracket of the specifid kind.
+    pub fn close(kind: BracketKind) -> Self {
+        Self {
+            kind,
+            ctrl: GroupControl::Close,
+        }
     }
 }
